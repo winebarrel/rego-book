@@ -1,0 +1,1 @@
+opa eval -i plan.json --format pretty 'json.filter(input.resource_changes[0], ["address", "mode", "type", "name", "change/actions", "change/after"])'
