@@ -1,0 +1,2 @@
+opa eval -d policy.rego -d roles.json --format pretty 'data'
+opa eval -d policy.rego -d roles.json -i input.json --format pretty 'data'

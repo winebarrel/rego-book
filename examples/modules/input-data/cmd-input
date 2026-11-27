@@ -1,0 +1,2 @@
+opa eval --format pretty 'input'
+opa eval -i servers.json --format pretty 'input[0]'
