@@ -1,0 +1,3 @@
+opa eval -d bundle --format pretty 'data.roles'
+opa eval -d bundle --format pretty 'data.team'
+opa eval -d bundle --format pretty 'data.access.can_write("admin")'

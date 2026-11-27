@@ -1,0 +1,3 @@
+opa eval --format json 'some x in ["a", "b"]'
+opa eval --format bindings 'some x in ["a", "b"]'
+opa eval --format raw '["a", "b"][_]'

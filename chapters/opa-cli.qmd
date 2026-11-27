@@ -1,0 +1,106 @@
+# OPA の CLI {#sec-opa-cli}
+
+第 II 部では、Rego の例を動かすために `opa eval` を使ってきました。第 III 部では、Rego を使うツールの側を説明します。この章では、OPA の CLI のうち、ポリシーを書くときによく使う `opa eval`、`opa fmt`、`opa check`、`opa test` をまとめます。
+
+## `opa eval`
+
+`opa eval` は、ポリシーとデータを読み込んで、クエリを評価するコマンドです。これまでに使ったオプションをまとめます。
+
+| オプション | 説明 |
+| --- | --- |
+| `-d ファイル` | ポリシー（`.rego`）やデータ（`.json`、`.yaml`）を読み込む。ディレクトリも指定できる |
+| `-i ファイル` | 入力を読み込む |
+| `-s ファイル` | 入力のスキーマを読み込む |
+| `--format 形式` | 結果の表示形式 |
+| `--strict-builtin-errors` | 組み込み関数の実行時のエラーで評価を止める |
+
+### 結果の表示形式
+
+この本では、主に `--format pretty` を使ってきました。ほかの形式も使えます。
+
+{{< run opa-cli/formats >}}
+
+| 形式 | 内容 |
+| --- | --- |
+| `json`（指定しないときの形式） | 結果をすべて含む JSON。式の値（`value`）と、変数の値（`bindings`）が、結果ごとに含まれる |
+| `pretty` | 人が読みやすい形。結果が 1 つなら値の JSON、複数なら表 |
+| `bindings` | 変数の値だけを、結果ごとに JSON で表示する |
+| `values` | 式の値だけを、結果ごとに JSON の配列で表示する |
+| `raw` | 式の値だけを、結果ごとに 1 行で表示する。文字列は引用符なしで表示する |
+
+`raw` は、シェルスクリプトで結果を使うときに便利です。
+
+### ディレクトリからデータを読み込む
+
+`-d` にディレクトリを指定すると、その中のポリシーとデータのファイルがすべて読み込まれます。
+
+{{< file opa-cli/dir-data/bundle/roles/data.json >}}
+
+{{< file opa-cli/dir-data/bundle/data.yaml >}}
+
+{{< file opa-cli/dir-data/bundle/policy.rego >}}
+
+{{< run opa-cli/dir-data >}}
+
+データのファイルは、置かれたディレクトリの名前が `data` の下のパスになります。`bundle/roles/data.json` の内容は `data.roles` に、`bundle` の直下にある `data.yaml` の内容は `data` の直下に読み込まれました。YAML のデータも JSON と同じように読み込まれます。
+
+## `opa fmt` と `opa check`
+
+`opa fmt` はポリシーを決まった形に整形し、`opa check` は構文や型の誤りを調べます。
+
+{{< file opa-cli/fmt-check/messy.rego >}}
+
+{{< file opa-cli/fmt-check/broken.rego >}}
+
+{{< run opa-cli/fmt-check >}}
+
+- `opa fmt --list` は、整形が必要なファイルの名前を表示します。
+- `opa fmt` はファイル名だけを指定すると、整形した結果を表示します。`-w` を付けると、ファイルを書き換えます。
+- `opa check` は、`broken.rego` の閉じかっこがないことを構文エラーとして報告しました。前の章で説明した `--strict` を付けると、不要なコードも指摘します。
+
+この本のサンプルも、すべて `opa fmt` で整形しています。
+
+## `opa test`
+
+`opa test` は、ポリシーのテストを実行するコマンドです。テストも Rego で書きます。
+
+{{< file opa-cli/test/policy.rego >}}
+
+{{< file opa-cli/test/policy_test.rego >}}
+
+名前が `test_` で始まるルールがテストです。テストのルールが成り立てば成功、成り立たなければ失敗です。テストは、テスト対象とは別のパッケージに書き、`import` でテスト対象を参照するのが一般的です。ファイル名は `_test.rego` で終わる名前にする慣習があります。
+
+テストでは、「`with`」の章で説明した `with` で入力とデータを差し替えます。入力ごとにファイルを用意しなくても、さまざまな場合を確かめられます。`with` は長くなるので、2 行に分けて書いています。
+
+{{< run opa-cli/test >}}
+
+`-v` を付けると、テストごとの結果が表示されます。
+
+テストが失敗すると、`-v` では失敗の理由も表示されます。次のテストは、`viewer` が書き込めると誤って期待しています。
+
+{{< file opa-cli/test-fail/policy_test.rego >}}
+
+{{< run opa-cli/test-fail >}}
+
+`FAILURES` の下に、評価の経過が表示されています。`policy.rego:8` の `internal.member_2("write", ...)` で失敗しています。`internal.member_2` は、`"write" in roles[...]` の `in` を表す内部の関数で、`viewer` の権限に `"write"` が含まれないために成り立たなかったことが分かります。
+
+`opa test` は、失敗したテストがあると、0 以外の終了コードで終わります。CI でテストを実行すれば、ポリシーの変更で既存の判断が変わったことに気づけます。
+
+## `print` でデバッグする
+
+ポリシーが期待どおりに動かないときは、ルール本体に `print` を書くと、評価の途中の値を表示できます。
+
+{{< file opa-cli/print/policy.rego >}}
+
+{{< file opa-cli/print/input.json >}}
+
+{{< run opa-cli/print >}}
+
+`print` の出力は、評価の結果とは別に表示されます。`print` はルール本体の条件としては常に成り立つので、ほかの式の結果には影響しません。`opa test` では、失敗したテストの `print` の出力が表示されます。`-v` を付けると、成功したテストの出力も表示されます。
+
+## まとめ
+
+- `opa eval` は `--format` で結果の表示形式を選べます。`-d` にディレクトリを指定すると、ディレクトリの名前がデータのパスになります。
+- `opa fmt` で整形し、`opa check` で構文や型の誤りを調べます。
+- `opa test` は `test_` で始まるルールをテストとして実行します。`with` で入力とデータを差し替えて書きます。
+- `print` で評価の途中の値を表示できます。
