@@ -1,0 +1,60 @@
+# はじめに {.unnumbered}
+
+この本は、ポリシー言語 Rego の入門書です。Rego を初めて書く人から、少し書いたことがある人までを対象にしています。
+
+Rego は、Open Policy Agent（OPA）で使われる言語です。「この API を呼んでよいか」「この Kubernetes マニフェストは社内ルールに従っているか」のような判断を、プログラムの本体から切り離してコードとして書けます。
+
+## この本の構成
+
+この本は 3 部に分かれています。
+
+第 I 部「概要」では、OPA、Rego、Conftest の関係を説明します。Rego を学ぶときにつまずきやすいのは、「言語としての Rego」の話と「OPA というツールの使い方」の話の区別です。最初にこの区別をつけておきます。
+
+第 II 部「Rego 言語」では、Rego の文法と考え方を説明します。OPA 公式ドキュメントの [Policy Language](https://www.openpolicyagent.org/docs/policy-language) と同じ順に進むので、読み終えた後は公式ドキュメントを辞書のように引けるはずです。ただし、まだ説明していない機能は使いません。そのために説明の順番を入れ替えた箇所があります。
+
+第 III 部「OPA と Conftest」では、OPA の CLI と Conftest を使って、実際のファイルを検査するポリシーを書きます。Kubernetes や Terraform などの題材ごとに、そのドメインの知識と、それに合わせた Rego の書き方を分けて説明します。
+
+## 環境の準備
+
+この本の例は、次のバージョンで動作を確かめています。
+
+| ツール | バージョン |
+| --- | --- |
+| OPA | 1.23.0 |
+| Conftest | 0.71.1 |
+
+第 II 部では OPA だけを使います。Conftest は第 III 部で使います。
+
+macOS では Homebrew でインストールできます。
+
+```bash
+brew install opa conftest
+```
+
+Homebrew で入るバージョンは最新版より遅れることがあります。同じバージョンをそろえたい場合や、ほかの OS を使う場合は、[OPA](https://github.com/open-policy-agent/opa/releases) と [Conftest](https://github.com/open-policy-agent/conftest/releases) の GitHub Releases からバイナリを入手してください。
+
+インストールできたら、バージョンを確認します。
+
+```console
+$ opa version
+$ conftest --version
+```
+
+### インストールせずに試す
+
+OPA の公式サイトには、ブラウザで Rego を書いて評価できる [Rego Playground](https://play.openpolicyagent.org/) があります。ポリシーと入力を貼り付けて「Evaluate」を押すと、結果が表示されます。手元に OPA を入れる前に雰囲気をつかみたいときは、第 II 部の例をここで試せます。
+
+## サンプルコード
+
+本文の例は、すべて [GitHub のリポジトリ](https://github.com/winebarrel/rego-book) の `examples/` に置いてあります。本文に載せている実行結果は、本をビルドするときに実際にコマンドを実行して得たものです。
+
+例えば次のように表示されているときは、例のディレクトリで `$` の後のコマンドを実行すると、その下の出力が得られます。
+
+```console
+$ opa eval -d policy.rego --format pretty 'data.greeting.message'
+"こんにちは"
+```
+
+## ライセンス
+
+この本の文章とサンプルコードは [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.ja) で公開しています。

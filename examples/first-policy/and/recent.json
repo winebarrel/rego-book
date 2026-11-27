@@ -1,0 +1,8 @@
+{
+  "method": "DELETE",
+  "user": {
+    "name": "alice",
+    "role": "admin",
+    "mfa_age_minutes": 5
+  }
+}

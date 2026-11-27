@@ -1,0 +1,3 @@
+package greeting
+
+message := "こんにちは"

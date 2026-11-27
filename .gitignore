@@ -1,0 +1,5 @@
+/_book/
+/.quarto/
+examples/**/output.txt
+
+**/*.quarto_ipynb
