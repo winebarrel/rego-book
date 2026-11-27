@@ -1,0 +1,2 @@
+opa eval -d without_import.rego -i input.json --format pretty 'data.without_import.not_web'
+opa eval -d with_import.rego -i input.json --format pretty 'data.with_import.not_web'
