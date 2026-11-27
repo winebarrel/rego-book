@@ -22,6 +22,7 @@ book:
         - chapters/first-policy.qmd
         - chapters/scalars-strings.qmd
         - chapters/composite-values.qmd
+        - chapters/variables-references.qmd
 
 lang: ja
 
@@ -45,10 +46,15 @@ format:
       - ja=standard
       - jafont=haranoaji
     papersize: b5
+    # 罫線の文字を含む等幅フォント
+    monofont: DejaVu Sans Mono
     include-in-header:
       - text: |
           % ファイル名付きのコードブロックを、本文から離れた位置に移動させない
           \AtBeginDocument{\floatplacement{codelisting}{H}}
+          % opa eval の表の罫線（U+2500-U+257F）を、和文ではなく欧文の等幅フォントで組む
+          \ltjdefcharrange{100}{"2500-"257F}
+          \ltjsetparameter{jacharrange={-100}}
     toc: true
     number-sections: true
     colorlinks: true
