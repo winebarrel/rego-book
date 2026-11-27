@@ -1,6 +1,6 @@
 # OPA の CLI {#sec-opa-cli}
 
-第 II 部では、Rego の例を動かすために `opa eval` を使ってきました。第 III 部では、Rego を使うツールの側を説明します。この章では、OPA の CLI のうち、ポリシーを書くときによく使う `opa eval`、`opa fmt`、`opa check`、`opa test` をまとめます。
+第 II 部では、Rego の例を動かすために `opa eval` を使ってきました。この章では、OPA の CLI のうち、ポリシーを書くときによく使う `opa eval`、`opa fmt`、`opa check`、`opa test` をまとめます。
 
 ## `opa eval`
 

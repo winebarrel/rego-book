@@ -1,6 +1,6 @@
 # OPA と Conftest の概要 {#sec-opa-conftest}
 
-第 II 部では、Rego という言語そのものを説明しました。第 III 部では、Rego を評価するツールである OPA と Conftest を使って、実際のファイルを検査します。この章では、2 つのツールの概要と、第 III 部の構成を説明します。
+第 III 部では、Rego を評価するツールである OPA と Conftest を使って、実際のファイルを検査します。この章では、2 つのツールの概要を説明します。
 
 ## OPA
 
@@ -27,16 +27,3 @@ Conftest は、設定ファイルを Rego のポリシーで検査するため�
 最後の点により、CI に組み込むと、決まりを守っていない設定の変更を、マージする前に見つけられます。
 
 Conftest のポリシーも Rego で書くので、第 II 部で説明した言語の知識はそのまま使えます。Conftest に固有なのは、どのルールを評価し、その値をどう扱うかという部分です。
-
-## 第 III 部の構成
-
-この章に続いて、次の章があります。
-
-| 章 | 内容 |
-| --- | --- |
-| OPA の CLI | `opa eval`、`opa fmt`、`opa check`、`opa test` |
-| Conftest は何を評価しているか | Rego 側で評価している値と、Conftest がその値のどこを見ているか |
-| Conftest の使い方 | `conftest test` の主なオプションと `conftest verify` |
-| Kubernetes マニフェスト、Terraform、Dockerfile | 題材ごとのポリシーの書き方 |
-
-題材ごとの章では、前半で検査する対象の構造（ドメインの情報）を、後半でそのためのポリシー（Rego の書き方）を説明します。
