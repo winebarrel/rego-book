@@ -1,0 +1,55 @@
+# `with` {#sec-with}
+
+ポリシーの結果は、入力とデータによって決まります。ポリシーを確かめるとき、入力のファイルを何通りも用意するのは手間がかかります。この章で説明する `with` を使うと、式を評価する間だけ、入力・データ・関数を別の値に差し替えられます。
+
+`with` は、ポリシーのテスト（「OPA の CLI」の章で説明する `opa test`）でよく使います。
+
+## 入力とデータを差し替える
+
+`式 with 差し替える対象 as 値` と書くと、その式を評価する間だけ、対象を値に差し替えます。
+
+{{< file with-keyword/queries/policy.rego >}}
+
+{{< file with-keyword/queries/roles.json >}}
+
+{{< run with-keyword/queries >}}
+
+1 つ目と 2 つ目のコマンドでは、`-i` で入力のファイルを指定する代わりに、`with input as {...}` で入力を直接与えています。役割が `"admin"` なら `allow` は `true`、`"viewer"` なら undefined です。
+
+3 つ目のコマンドのように、`with` は続けて複数書けます。`with data.roles.viewer as [...]` で、データの `viewer` の権限を差し替えたので、`"viewer"` でも `allow` が `true` になりました。
+
+差し替えられるのは、`input` 全体、`input.user.role` のような `input` の一部、`data` の下の値です。差し替えは `with` を付けた式の評価にだけ効き、ほかの式には影響しません。
+
+## ルールの中で使う
+
+`with` は、ルール本体の式にも書けます。
+
+{{< file with-keyword/in-rule/policy.rego >}}
+
+{{< file with-keyword/in-rule/input.json >}}
+
+{{< run with-keyword/in-rule >}}
+
+`admin_can_write` は、入力全体を差し替えて `allow` を評価しています。`viewer_can_write` は、`input.user.role` だけを `"viewer"` に差し替えています。入力の `user` は `bob` のままで、役割だけが変わります。`viewer` には `write` の権限がないので、`viewer_can_write` は undefined になりました。
+
+`allow` そのものは、差し替えのない元の入力（役割は `"admin"`）で評価されて `true` です。`with` による差し替えが、その式の中だけに効いていることが分かります。
+
+## 関数を差し替える
+
+`with` では、組み込み関数やポリシーで定義した関数も差し替えられます。
+
+{{< file with-keyword/functions/policy.rego >}}
+
+{{< run with-keyword/functions >}}
+
+`is_weekend` は、現在の時刻（`time.now_ns()`）から曜日（`time.weekday`）を求めて、土曜か日曜かを調べるルールです。結果は評価した日によって変わるので、そのままでは確かめにくいルールです。
+
+`with time.weekday as "Sunday"` と書くと、`time.weekday` を呼び出した結果が常に `"Sunday"` になります。このように、関数を値で差し替えると、関数はその値を返すようになります。
+
+4 つ目のコマンドの `with upper as data.access.bracket` は、組み込み関数 `upper` を、ポリシーで定義した関数 `bracket` に差し替えています。`display_name` の `upper(input.user.name)` は `bracket(input.user.name)` として評価され、`"[alice]"` になりました。関数を関数で差し替える場合は、引数の数がそろっている必要があります。
+
+## まとめ
+
+- `式 with 対象 as 値` で、その式を評価する間だけ、入力・データ・関数を差し替えられます。
+- `with` は続けて複数書けます。差し替えは `with` を付けた式の中だけに効きます。
+- 関数を値で差し替えると、その値を返すようになります。関数で差し替えると、その関数が呼ばれます。

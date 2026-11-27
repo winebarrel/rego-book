@@ -1,0 +1,4 @@
+opa eval -d policy.rego --format pretty 'data.access.is_weekend with time.weekday as "Sunday"'
+opa eval -d policy.rego --format pretty 'data.access.is_weekend with time.weekday as "Monday"'
+opa eval -d policy.rego --format pretty 'data.access.display_name with input.user.name as "alice"'
+opa eval -d policy.rego --format pretty 'data.access.display_name with input.user.name as "alice" with upper as data.access.bracket'
