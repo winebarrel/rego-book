@@ -1,5 +1,8 @@
 # Rego 入門
 
+[![book](https://github.com/winebarrel/rego-book/actions/workflows/book.yml/badge.svg)](https://github.com/winebarrel/rego-book/actions/workflows/book.yml)
+[![AI Generated](https://img.shields.io/badge/AI%20Generated-Claude-orange?logo=anthropic)](https://claude.com/product/claude-code)
+
 OPA のポリシー言語 Rego と、Conftest の入門書です。
 
 - Web 版: https://winebarrel.github.io/rego-book/
