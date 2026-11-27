@@ -1,0 +1,6 @@
+{
+  "containers": [
+    {"image": "registry.example.com/app:1.2.0"},
+    {"image": "docker.io/library/nginx:latest"}
+  ]
+}

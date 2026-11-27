@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.containers'
+opa inspect -a policy.rego

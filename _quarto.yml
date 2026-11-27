@@ -33,6 +33,7 @@ book:
         - chapters/default-else.qmd
         - chapters/operators.qmd
         - chapters/builtins.qmd
+        - chapters/metadata.qmd
 
 lang: ja
 
