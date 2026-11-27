@@ -1,0 +1,1 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.app'
