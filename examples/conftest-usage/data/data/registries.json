@@ -1,0 +1,3 @@
+{
+  "allowed": ["registry.example.com", "ghcr.io"]
+}

@@ -1,0 +1,7 @@
+kind: Service
+metadata:
+  name: web
+---
+kind: Deployment
+metadata:
+  name: web
