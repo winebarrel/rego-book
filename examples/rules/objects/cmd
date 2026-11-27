@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.servers'
+opa eval -d policy.rego -i input.json --format pretty 'data.servers.ports_by_name["web-1"]'

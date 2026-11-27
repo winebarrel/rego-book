@@ -24,6 +24,7 @@ book:
         - chapters/composite-values.qmd
         - chapters/variables-references.qmd
         - chapters/comprehensions.qmd
+        - chapters/rules.qmd
 
 lang: ja
 
