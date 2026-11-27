@@ -39,6 +39,9 @@ jobs:
 
       - name: Install TinyTeX and LaTeX packages
         if: steps.cache-tinytex.outputs.cache-hit != 'true'
+        env:
+          # quarto install calls the GitHub API; authenticate to avoid the rate limit (403).
+          GH_TOKEN: ${{ github.token }}
         run: |
           quarto install tool tinytex --no-prompt --log-level warning
           ~/.TinyTeX/bin/x86_64-linux/tlmgr update --self
