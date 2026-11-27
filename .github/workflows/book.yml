@@ -26,7 +26,26 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: 1.11.9
-          tinytex: true
+
+      # Cache TinyTeX together with the LaTeX packages the PDF build needs (.github/tex-packages.txt).
+      # If the build starts needing a package that is not listed, Quarto installs it on the fly,
+      # so add it to .github/tex-packages.txt to keep it in the cache.
+      - name: Cache TinyTeX
+        id: cache-tinytex
+        uses: actions/cache@v6
+        with:
+          path: ~/.TinyTeX
+          key: tinytex-${{ runner.os }}-quarto-1.11.9-${{ hashFiles('.github/tex-packages.txt') }}
+
+      - name: Install TinyTeX and LaTeX packages
+        if: steps.cache-tinytex.outputs.cache-hit != 'true'
+        run: |
+          quarto install tool tinytex --no-prompt --log-level warning
+          ~/.TinyTeX/bin/x86_64-linux/tlmgr update --self
+          ~/.TinyTeX/bin/x86_64-linux/tlmgr install $(cat .github/tex-packages.txt)
+
+      - name: Add TinyTeX to PATH
+        run: echo "$HOME/.TinyTeX/bin/x86_64-linux" >> "$GITHUB_PATH"
 
       # scripts/gen-outputs.sh runs as a pre-render step and generates the outputs of the examples.
       - name: Build book

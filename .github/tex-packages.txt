@@ -1,0 +1,7 @@
+bxjscls
+bxorigcapt
+haranoaji
+luatexja
+nameref
+selnolig
+type1cm
