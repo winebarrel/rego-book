@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i recent.json --format pretty 'data.access.can_delete'
+opa eval -d policy.rego -i stale.json --format pretty 'data.access.can_delete'

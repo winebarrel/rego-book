@@ -1,0 +1,50 @@
+project:
+  type: book
+  output-dir: _book
+  pre-render: scripts/gen-outputs.sh
+
+book:
+  title: "Rego 入門"
+  output-file: rego-book
+  subtitle: "OPA のポリシー言語と Conftest"
+  author: "winebarrel"
+  language: ja
+  date: today
+  repo-url: https://github.com/winebarrel/rego-book
+  repo-actions: [issue]
+  downloads: [pdf, epub]
+  chapters:
+    - index.qmd
+    - part: "概要"
+      chapters:
+        - chapters/overview.qmd
+    - part: "Rego 言語"
+      chapters:
+        - chapters/first-policy.qmd
+
+lang: ja
+
+syntax-definitions:
+  - assets/rego.xml
+
+format:
+  html:
+    theme: cosmo
+    code-copy: true
+  pdf:
+    pdf-engine: lualatex
+    documentclass: bxjsbook
+    classoption:
+      - pandoc
+      - ja=standard
+      - jafont=haranoaji
+    papersize: b5
+    include-in-header:
+      - text: |
+          % ファイル名付きのコードブロックを、本文から離れた位置に移動させない
+          \AtBeginDocument{\floatplacement{codelisting}{H}}
+    toc: true
+    number-sections: true
+    colorlinks: true
+  epub:
+    toc: true
