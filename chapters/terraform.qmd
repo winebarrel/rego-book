@@ -1,0 +1,98 @@
+# Terraform {#sec-terraform}
+
+この章では、Terraform の設定を検査します。Terraform は、Conftest で検査できる対象が 2 つあります。HCL で書いたソース（`.tf` ファイル）と、変更の計画（plan）を JSON にしたものです。前半でそれぞれの構造を説明し、後半で同じ決まりを両方に対して書いて比べます。
+
+## ドメインの情報: HCL のソースと plan
+
+Terraform では、作りたいクラウドのリソースを HCL という言語で `.tf` ファイルに書きます。`terraform plan` を実行すると、Terraform は現在の状態と比べて、どのリソースをどう変更するかの計画を作ります。この計画を `terraform show -json` で JSON に変換したものを、ここでは plan の JSON と呼びます。
+
+```console
+$ terraform plan -out tfplan
+$ terraform show -json tfplan > plan.json
+```
+
+この章では、次の 3 つのリソースを例にします。
+
+{{< file terraform/hcl/main.tf >}}
+
+- `aws_s3_bucket.logs` は、S3 のバケットです。タグを変数 `var.tags` で指定していて、その既定値は `{Owner = "platform"}` です。
+- `aws_s3_bucket.tmp` は、タグのないバケットです。
+- `aws_security_group_rule.ssh` は、SSH（22 番ポート）への接続を、すべての IP アドレス（`0.0.0.0/0`）から許可する設定です。
+
+### HCL のソースの構造
+
+Conftest は、`.tf` ファイルを次のような `input` に変換します。
+
+{{< run terraform/hcl parse >}}
+
+`resource` の下に、リソースの種類（`aws_s3_bucket`）、名前（`logs`）の順に入れ子になっています。ブロックの内容は配列の要素として入っています。
+
+注目したいのは、`logs` の `tags` が `"${var.tags}"` という文字列になっていることです。HCL のソースには、変数を参照するという書き方しか書かれていません。変数の値を展開するのは Terraform なので、ソースを読むだけでは実際のタグは分かりません。
+
+### plan の JSON の構造
+
+plan の JSON は、Terraform が変数やモジュールを展開した後の値を含みます。plan の JSON を作るために使った `.tf` ファイルには、AWS に接続せずに plan を作るためのプロバイダの設定を加えています。
+
+{{< file terraform/plan/main.tf >}}
+
+変更の内容は `resource_changes` にあります。1 件を、`json.filter`（オブジェクトから指定したパスだけを残す組み込み関数）で主な項目に絞って表示します。
+
+{{< run terraform/plan show >}}
+
+| 項目 | 内容 |
+| --- | --- |
+| `address` | リソースの住所（`種類.名前`） |
+| `mode` | 作るリソースは `managed`、読み込むだけのデータソースは `data` |
+| `type`、`name` | リソースの種類と名前 |
+| `change.actions` | 変更の種類。`create`、`update`、`delete` など。作り直す場合は `["delete", "create"]` |
+| `change.after` | 変更後の値。削除する場合は `null` |
+
+`change.after.tags` には、変数を展開した `{"Owner": "platform"}` が入っています。
+
+## Rego の書き方
+
+次の決まりを検査します。
+
+- S3 のバケットには `Owner` のタグを付ける
+- SSH をすべての IP アドレスに開放しない
+- （plan だけ）リソースを削除しない
+
+### HCL のソースを検査する
+
+{{< file terraform/hcl/policy/main.rego >}}
+
+{{< run terraform/hcl >}}
+
+`input.resource.aws_s3_bucket` はリソース名をキーにしたオブジェクトなので、`some name, blocks in` で名前とブロックの配列を取り出し、さらに `some bucket in blocks` でブロックを取り出しています。
+
+結果を見ると、`logs` も `tags.Owner is required` で失敗しています。`logs` の `tags` は `"${var.tags}"` という文字列なので、`bucket.tags.Owner` は undefined になるからです。実際には `Owner` のタグが付くのに、ソースからは分からないので、誤って失敗にしてしまいました。
+
+HCL のソースを検査する方法は、`terraform plan` を実行しなくてよいので手軽です。ただし、変数・モジュール・関数で決まる値は検査できません。
+
+### plan の JSON を検査する
+
+{{< file terraform/plan/policy/main.rego >}}
+
+`changes` は、作成・更新後の値（`change.after`）があるリソースの変更を集める補助のルールです。削除の場合は `change.after` が `null` なので、`is_object` で除いています。データソース（`mode` が `data`）も除いています。
+
+削除を禁止するルールは、`change.actions` に `"delete"` が含まれるかを調べています。作り直し（`["delete", "create"]`）も含まれます。この例の plan には削除がないので、テストで確かめます。
+
+{{< file terraform/plan/policy/main_test.rego >}}
+
+{{< run terraform/plan >}}
+
+`conftest test plan.json` で失敗したのは、`tmp` のバケットと SSH の設定だけです。plan では `logs` の実際のタグが見えるので、誤って失敗にすることがなくなりました。`conftest verify` では、削除のテストが成功しています。
+
+plan の JSON を検査する方法は、Terraform が計算した実際の値を検査できます。ただし、`terraform plan` を実行する必要があり、そのためにはプロバイダの認証情報などが必要になることがあります。また、作成するまで決まらない値（ID など）は、plan では値がなく `after_unknown` に記録されます。
+
+## まとめ
+
+| | HCL のソース | plan の JSON |
+| --- | --- | --- |
+| 準備 | 不要 | `terraform plan` と `terraform show -json` |
+| `input` の構造 | `resource.種類.名前` の下にブロックの配列 | `resource_changes` の配列。値は `change.after` |
+| 変数などの値 | 展開されない | 展開される |
+| 変更の種類 | 分からない | `change.actions` で分かる |
+
+- HCL のソースは手軽に検査できますが、変数などで決まる値は検査できません。
+- plan の JSON は、変数を展開した実際の値と、変更の種類を検査できます。
