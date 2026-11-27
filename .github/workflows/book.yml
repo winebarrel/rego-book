@@ -41,6 +41,7 @@ jobs:
         if: steps.cache-tinytex.outputs.cache-hit != 'true'
         run: |
           quarto install tool tinytex --no-prompt --log-level warning
+          ~/.TinyTeX/bin/x86_64-linux/tlmgr update --self
           ~/.TinyTeX/bin/x86_64-linux/tlmgr install $(cat .github/tex-packages.txt)
 
       - name: Add TinyTeX to PATH
