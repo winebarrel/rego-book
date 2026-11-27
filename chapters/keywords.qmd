@@ -78,7 +78,7 @@
 | `contains` | `ルール contains 値 if { 本体 }` | ルール |
 | `some` | `some i`、`some x in 値` | 変数と参照 |
 | `in` | `some x in 値`、`値 in コレクション` | 変数と参照、この章 |
-| `every` | `every x in 値 { 本体 }` | 全称量化 |
+| `every` | `every x in 値 { 本体 }` | すべての要素に対する条件 |
 | `not` | `not 式` | 否定 |
 | `and`、`or` | `式 and 式`、`式 or 式` | この章 |
 

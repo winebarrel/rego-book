@@ -32,7 +32,7 @@
 | 6. 内包表記 | 配列・オブジェクト・集合の内包表記 | Comprehensions |
 | 7. ルール | 集合（`contains`）・オブジェクトを生成するルール、増分定義、完全定義、参照を含むルールヘッド、関数 | Rules |
 | 8. 否定 | `not` | Negation |
-| 9. 全称量化 | `every` と、否定を使った書き方 | Universal Quantification, Every Keyword |
+| 9. すべての要素に対する条件 | `every` と、否定を使った書き方 | Universal Quantification, Every Keyword |
 | 10. モジュール | コメント、パッケージ、インポート | Modules |
 | 11. キーワードの整理 | `in`（所属判定）、`if`、`contains`、`some`、`or` | In / If / Contains / Some / And and Or Keyword |
 | 12. `with` | 入力・データ・関数の差し替え | With Keyword |
@@ -65,7 +65,7 @@
 | 添字によるアクセス（最低限） | References | 4 章 | 配列やオブジェクトの要素を取り出す例に必要になる |
 | `some` による反復 | Some Keyword, In Keyword | 5 章 | 参照の説明で反復を扱うため。`in` による所属判定は 11 章で説明する |
 | `contains` | Contains Keyword | 7 章 | ドキュメントでも Rules で使い始めるので、そこで説明する |
-| `every` | Every Keyword | 9 章 | 全称量化の章でまとめて説明する |
+| `every` | Every Keyword | 9 章 | 「すべての要素に対する条件」の章でまとめて説明する |
 | `import future.keywords.not`（最低限） | Modules > Imports | 8 章 | `not` を正しく使うために必要になる。`import` 全般は 10 章で説明する |
 
 執筆を進めて新たに順番を変えた箇所は、この表に追記する。
