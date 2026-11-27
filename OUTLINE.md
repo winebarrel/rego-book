@@ -44,12 +44,13 @@
 
 ### 第 III 部 OPA と Conftest
 
-18. OPA の CLI: `opa eval`、`opa fmt`、`opa check`、`opa test`（ドキュメントの Policy Testing に対応）
-19. Conftest は何を評価しているか: Conftest と OPA の関係、ファイルから `input` を作る仕組み、どのパッケージのどのルールを問い合わせるか、ルールの値のどこを見て成否を決めるか、`exception`、`data.conftest.file`
-20. Conftest の使い方: `conftest test` の主なオプション、`conftest verify` によるポリシーのテスト
-21. Kubernetes マニフェスト: ドメインの情報 → Rego の書き方
-22. Terraform: ドメインの情報（HCL と plan JSON）→ Rego の書き方
-23. Dockerfile: ドメインの情報 → Rego の書き方
+18. OPA と Conftest の概要（`chapters/opa-conftest.qmd`）: OPA の使われ方、Conftest が担当すること、第 III 部の構成
+19. OPA の CLI: `opa eval`、`opa fmt`、`opa check`、`opa test`（ドキュメントの Policy Testing に対応）
+20. Conftest は何を評価しているか: Conftest と OPA の関係、ファイルから `input` を作る仕組み、どのパッケージのどのルールを問い合わせるか、ルールの値のどこを見て成否を決めるか、`exception`、`data.conftest.file`
+21. Conftest の使い方: `conftest test` の主なオプション、`conftest verify` によるポリシーのテスト
+22. Kubernetes マニフェスト: ドメインの情報 → Rego の書き方
+23. Terraform: ドメインの情報（HCL と plan JSON）→ Rego の書き方
+24. Dockerfile: ドメインの情報 → Rego の書き方
 
 ## ドキュメントの順番と変えた箇所
 
