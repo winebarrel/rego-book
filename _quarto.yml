@@ -42,6 +42,7 @@ book:
         - chapters/conftest-usage.qmd
         - chapters/kubernetes.qmd
         - chapters/terraform.qmd
+        - chapters/dockerfile.qmd
 
 lang: ja
 
