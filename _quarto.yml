@@ -35,7 +35,7 @@ book:
         - chapters/builtins.qmd
         - chapters/metadata.qmd
         - chapters/schema-strict.qmd
-    - part: "OPA と Conftest"
+    - part: chapters/part-opa-conftest.qmd
       chapters:
         - chapters/opa-cli.qmd
         - chapters/conftest-internals.qmd

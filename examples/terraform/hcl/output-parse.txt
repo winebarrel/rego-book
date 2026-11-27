@@ -1,0 +1,42 @@
+$ conftest parse main.tf
+{
+  "resource": {
+    "aws_s3_bucket": {
+      "logs": [
+        {
+          "bucket": "example-logs",
+          "tags": "${var.tags}"
+        }
+      ],
+      "tmp": [
+        {
+          "bucket": "example-tmp"
+        }
+      ]
+    },
+    "aws_security_group_rule": {
+      "ssh": [
+        {
+          "cidr_blocks": [
+            "0.0.0.0/0"
+          ],
+          "from_port": 22,
+          "protocol": "tcp",
+          "security_group_id": "sg-12345678",
+          "to_port": 22,
+          "type": "ingress"
+        }
+      ]
+    }
+  },
+  "variable": {
+    "tags": [
+      {
+        "default": {
+          "Owner": "platform"
+        },
+        "type": "${map(string)}"
+      }
+    ]
+  }
+}
