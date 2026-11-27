@@ -2,6 +2,7 @@
 --
 --   {{< file first-policy/hello/policy.rego >}}  ファイルの中身をコードブロックで表示する
 --   {{< run first-policy/hello >}}               cmd を実行した結果（output.txt）を表示する
+--   {{< run first-policy/hello parse >}}         cmd-parse を実行した結果（output-parse.txt）を表示する
 
 local languages = {
   rego = "rego",
@@ -55,7 +56,12 @@ end
 
 local function run(args)
   local rel = pandoc.utils.stringify(args[1])
-  local output = read_file(example_path(rel .. "/output.txt"))
+  -- 2 つ目の引数があれば、cmd-名前 の結果（output-名前.txt）を表示する
+  local name = "output.txt"
+  if args[2] ~= nil then
+    name = "output-" .. pandoc.utils.stringify(args[2]) .. ".txt"
+  end
+  local output = read_file(example_path(rel .. "/" .. name))
   return pandoc.Blocks({ pandoc.CodeBlock(output, pandoc.Attr("", { "console" })) })
 end
 
