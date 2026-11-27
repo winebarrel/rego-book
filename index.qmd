@@ -1,5 +1,9 @@
 # はじめに {.unnumbered}
 
+```{=html}
+<p><a href="https://claude.com/product/claude-code"><img src="https://img.shields.io/badge/AI%20Generated-Claude-orange?logo=anthropic" alt="AI Generated"></a></p>
+```
+
 この本は、ポリシー言語 Rego の入門書です。Rego を初めて書く人から、少し書いたことがある人までを対象にしています。
 
 Rego は、Open Policy Agent（OPA）で使われる言語です。「この API を呼んでよいか」「この Kubernetes マニフェストは社内ルールに従っているか」のような判断を、プログラムの本体から切り離してコードとして書けます。
