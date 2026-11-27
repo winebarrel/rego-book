@@ -24,6 +24,9 @@ while IFS= read -r -d '' cmdfile; do
     fi
   done < "$cmdfile"
 
+  # NO_COLOR を見ないツール（conftest など）が出力する色の制御文字を取り除く。
+  perl -pi -e 's/\e\[[0-9;]*m//g' "$out"
+
   if [ -f "$dir/expect-fail" ]; then
     if [ "$failed" -eq 0 ]; then
       echo "失敗するはずのコマンドが成功しました: $dir" >&2

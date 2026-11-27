@@ -38,6 +38,7 @@ book:
     - part: "OPA と Conftest"
       chapters:
         - chapters/opa-cli.qmd
+        - chapters/conftest-internals.qmd
 
 lang: ja
 
