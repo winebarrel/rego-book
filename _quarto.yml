@@ -23,6 +23,7 @@ book:
         - chapters/scalars-strings.qmd
         - chapters/composite-values.qmd
         - chapters/variables-references.qmd
+        - chapters/comprehensions.qmd
 
 lang: ja
 
