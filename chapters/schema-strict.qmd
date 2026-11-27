@@ -1,0 +1,65 @@
+# スキーマと strict モード {#sec-schema-strict}
+
+Rego では、存在しない値を参照しても、エラーにならずに undefined になるだけです。そのため、入力のフィールド名を打ち間違えても、ルールが黙って成り立たなくなるだけで、誤りに気づきにくいことがあります。この章では、入力の形を JSON Schema で OPA に教えて誤りを検出する方法と、使われていないコードを指摘する strict モードを説明します。
+
+## スキーマで入力の形を教える
+
+次のポリシーは、`role` を `rol` と打ち間違えています。
+
+{{< file schema-strict/typo/policy.rego >}}
+
+{{< file schema-strict/typo/input.json >}}
+
+入力の形を表す JSON Schema を用意します。JSON Schema は、JSON の値の形（オブジェクトのキーや値の型）を JSON で記述する形式です。
+
+{{< file schema-strict/typo/input.schema.json >}}
+
+このスキーマは、入力が `user` というオブジェクトを持ち、その中に文字列の `name` と `role` があることを表しています。
+
+{{< run schema-strict/typo >}}
+
+1 つ目のコマンドでは、`input.user.rol` が undefined になり、`allow` は結果に含まれません。エラーは何も表示されないので、打ち間違いに気づけません。
+
+2 つ目のコマンドでは、`-s` でスキーマのファイルを指定しています。OPA は、スキーマから `input.user` のキーが `name` と `role` だと分かるので、`rol` を参照している誤りを評価の前に型エラーとして報告しました。
+
+スキーマは、値の型の誤りも検出します。
+
+{{< file schema-strict/type-mismatch/policy.rego >}}
+
+{{< run schema-strict/type-mismatch >}}
+
+スキーマでは `role` は文字列なので、数値の `1` と比べても成り立つことはありません。このような比較も、型エラー（`match error`）として報告されます。
+
+## アノテーションでスキーマを指定する
+
+前の章で紹介したアノテーションの `schemas` を使うと、ルールごとに使うスキーマを指定できます。
+
+{{< file schema-strict/annotation/policy.rego >}}
+
+`-s` にディレクトリを指定すると、その中の JSON ファイルが `schema.ファイル名` という名前で参照できるようになります。ここでは `schemas/user_request.json` を `schema.user_request` として、`allow` の入力のスキーマに指定しています。
+
+{{< file schema-strict/annotation/schemas/user_request.json >}}
+
+{{< run schema-strict/annotation >}}
+
+入力の形がルールによって違う場合は、このようにアノテーションでスキーマを指定します。
+
+## strict モード
+
+`opa check` は、ポリシーの構文や型の誤りを調べるコマンドです。`--strict` を付けると、誤りではないものの、不要なコードも指摘します。
+
+{{< file schema-strict/strict/policy.rego >}}
+
+{{< run schema-strict/strict >}}
+
+`--strict` なしの `opa check` は何も報告しませんでした。`--strict` を付けると、使われていない `import data.roles` と、代入したのに使われていない変数 `name` が報告されました。
+
+使われていない変数は、書き忘れや打ち間違いのしるしであることがあります。例えば、`name` を使った条件を書くつもりで忘れていたのかもしれません。strict モードで、このような見落としに気づけます。
+
+## まとめ
+
+- 存在しない値の参照は undefined になるだけなので、打ち間違いに気づきにくいことがあります。
+- `-s` で JSON Schema を指定すると、入力の参照や型の誤りを評価の前に検出できます。アノテーションの `schemas` で、ルールごとにスキーマを指定することもできます。
+- `opa check --strict` は、使われていない `import` や変数などを指摘します。
+
+これで第 II 部「Rego 言語」は終わりです。次の第 III 部では、OPA の CLI と Conftest を使って、実際のファイルを検査するポリシーを書きます。

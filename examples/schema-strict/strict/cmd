@@ -1,0 +1,2 @@
+opa check policy.rego
+opa check --strict policy.rego
