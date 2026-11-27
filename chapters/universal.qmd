@@ -1,0 +1,67 @@
+# 全称量化 {#sec-universal}
+
+「変数と参照」の章で見たように、ルール本体の反復は「条件を満たす要素が 1 つでもあれば成り立つ」という意味でした。この章では、反対の「すべての要素が条件を満たす」ことを調べる方法を説明します。このような「すべての〜について」という条件を、全称量化と呼びます。
+
+Rego では、全称量化を `every` で書くほか、否定や `count` を使っても書けます。それぞれの書き方と、要素がないときの違いを見ていきます。
+
+## `every`
+
+`every 変数 in 値 { 本体 }` と書くと、値のすべての要素について本体が成り立つときに成り立つ条件になります。
+
+{{< file universal/every/policy.rego >}}
+
+{{< file universal/every/ng.json >}}
+
+{{< run universal/every >}}
+
+`all_tls` は、すべてのサーバーの `tls` が `true` のときに `true` になります。`ok.json` ではどちらのサーバーも `tls` が `true` なので成り立ちました。`ng.json` では `db-1` の `tls` が `false` なので、本体が成り立たない要素があり、`all_tls` は undefined になりました。
+
+`some ... in` と同じく、変数を 2 つ書くと、配列では添字と要素、オブジェクトではキーと値を受け取れます。本体には複数の式を書けて、要素ごとにすべての式が成り立つ必要があります。
+
+{{< file universal/forms/policy.rego >}}
+
+{{< file universal/forms/input.json >}}
+
+{{< run universal/forms >}}
+
+`all_short_names` は、`database-1` の名前が 8 文字を超えるので成り立ちません。`all_labels_filled` は、すべてのラベルのキーと値が空文字列でないので成り立ちました。
+
+`every` の本体で使った変数は、本体の中だけで使えます。
+
+## 否定と `count` で書く
+
+`every` を使わなくても、これまでに説明した機能で全称量化を書けます。
+
+{{< file universal/alternatives/policy.rego >}}
+
+{{< run universal/alternatives >}}
+
+`all_tls_by_not` は、「`tls` でないサーバーが 1 つもない」と言い換えて書いています。`has_plain` で `tls` でないサーバーがあるかを調べ、`not has_plain` でそれを否定しています。
+
+`all_tls_by_count` は、`tls` でないサーバーを内包表記で集め、その数が `0` であることを調べています。
+
+どちらも `ok.json` では成り立ち、`ng.json` では成り立ちません。`every` と同じ結果です。
+
+## 要素がないとき
+
+3 つの書き方は、要素がないときに結果が異なります。
+
+{{< file universal/edge/policy.rego >}}
+
+{{< run universal/edge >}}
+
+`empty.json` のように `servers` が空の配列のときは、3 つとも成り立ちました。調べる要素が 1 つもないので、条件に反する要素もないからです。
+
+`missing.json` のように `servers` そのものが入力にないときは、結果が分かれました。
+
+- `all_tls_by_every`: `input.servers` が undefined なので、`every` は成り立ちません。
+- `all_tls_by_not`: `has_plain` の本体が成り立たず undefined になるので、`not has_plain` は成り立ちます。
+- `all_tls_by_count`: 内包表記は空の配列になるので、`count(plain) == 0` は成り立ちます。
+
+入力に値がないことを「条件を満たさない」として扱いたいなら `every`、「違反がない」として扱いたいなら否定や `count` の書き方が合います。ただし、空の配列の場合はどの書き方でも成り立ちます。空の配列を認めたくない場合は、`count(input.servers) > 0` のような条件を別に加えます。
+
+## まとめ
+
+- `every x in 値 { 本体 }` は、すべての要素について本体が成り立つときに成り立ちます。
+- 「条件に反する要素がない」と言い換えて、否定や `count` でも書けます。
+- 空の配列には、どの書き方でも成り立ちます。値そのものが undefined のときは、`every` だけが成り立ちません。

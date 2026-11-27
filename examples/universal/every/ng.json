@@ -1,0 +1,6 @@
+{
+  "servers": [
+    {"name": "web-1", "tls": true},
+    {"name": "db-1", "tls": false}
+  ]
+}
