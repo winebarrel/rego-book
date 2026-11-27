@@ -1,0 +1,6 @@
+opa eval --format pretty '"admin" in ["dev", "admin"]'
+opa eval --format pretty '"admin" in {"dev", "admin"}'
+opa eval --format pretty '"ops" in {"dev", "admin"}'
+opa eval --format pretty '"admin" in {"role": "admin"}'
+opa eval --format pretty '"role" in {"role": "admin"}'
+opa eval --format pretty '"role", "admin" in {"role": "admin"}'
