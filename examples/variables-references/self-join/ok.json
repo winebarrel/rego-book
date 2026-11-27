@@ -1,0 +1,6 @@
+{
+  "servers": [
+    {"name": "web-1"},
+    {"name": "web-2"}
+  ]
+}

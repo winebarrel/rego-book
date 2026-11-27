@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i ok.json --format pretty 'data.servers.duplicate_name'
+opa eval -d policy.rego -i dup.json --format pretty 'data.servers.duplicate_name'

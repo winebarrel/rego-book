@@ -1,0 +1,123 @@
+# 変数と参照 {#sec-variables-references}
+
+これまでの例では、`input.user.role` のように、決まった場所の値だけを取り出していました。実際のポリシーでは、「サーバーの一覧の中に本番環境のものがあるか」のように、配列やオブジェクトの要素を 1 つずつ調べる必要があります。
+
+この章では、ルール本体で使う変数と、値をたどる書き方（参照）を説明します。参照の中に変数を書くと、要素を 1 つずつ調べる反復になります。
+
+## 変数
+
+ルール本体では、`変数名 := 値` で変数に値を代入できます。
+
+{{< file variables-references/local-vars/policy.rego >}}
+
+{{< file variables-references/local-vars/input.json >}}
+
+{{< run variables-references/local-vars >}}
+
+`name`、`role`、`msg` はルール本体の中だけで使える変数です。`msg := $"{name} ({role})"` のように、代入した変数は後の式で使えます。ルールヘッドの `message := msg` のように、ルールの値にも使えます。
+
+変数には一度しか代入できません。同じ変数に 2 回代入すると、エラーになります。
+
+{{< file variables-references/reassign/policy.rego >}}
+
+{{< run variables-references/reassign >}}
+
+## 参照の中の変数で要素を探す
+
+前の章までの参照では、`ports[0]` や `server.name` のように、取り出す場所を決めて書いていました。参照の添字やキーの位置に変数を書くと、OPA はその式が成り立つ値を変数に当てはめて探します。
+
+ここからは、次の入力を使います。サーバーの一覧と、チームが担当するサーバーの一覧です。
+
+{{< file variables-references/query/input.json >}}
+
+`opa eval` のクエリに、変数を含む参照を書いてみます。
+
+{{< run variables-references/query >}}
+
+1 つ目のクエリ `input.servers[i].name` では、`i` に 0、1、2 が当てはめられました。結果の表は、`i` の値ごとに、参照の値を並べたものです。このように、変数を含む式は、成り立つ値の組み合わせが複数あると、そのすべてを結果として返します。
+
+2 つ目のクエリでは、`input.servers[i].env == "prod"` が成り立つ `i` だけが返りました。`env` が `"staging"` の `i = 1` は、`==` が成り立たないので結果に含まれません。
+
+3 つ目の `_` は、値を使わない変数です。添字に興味がなく、要素だけを調べたいときに使います。`_` を複数書いた場合、それぞれ別の変数として扱われます。
+
+### ルール本体で要素を探す
+
+ルール本体に変数を含む式を書くと、「その式が成り立つ値が 1 つでもあれば条件が成り立つ」という意味になります。
+
+{{< file variables-references/some-index/policy.rego >}}
+
+{{< run variables-references/some-index >}}
+
+`has_staging` は、`env` が `"staging"` のサーバーが 1 つあるので `true` になりました。`has_dev` は、`"dev"` のサーバーがないので undefined です。
+
+`has_staging` の `some i` は、`i` がこのルール本体で使う変数であることを宣言しています。`some` を書かなくても動きますが、同じパッケージに `i` という名前のルールがあると、`i` はそのルールの値を指してしまいます。参照の中で変数を使うときは、`some` で宣言しておくと安全です。`_` は宣言しなくても、常に値を使わない変数として扱われます。
+
+## `some ... in` で要素を 1 つずつ取り出す
+
+添字を使わずに、配列の要素を直接変数に取り出す書き方もあります。`some 変数 in 配列` と書くと、配列の要素が 1 つずつ変数に当てはめられます。
+
+{{< file variables-references/some-in/policy.rego >}}
+
+{{< run variables-references/some-in >}}
+
+`has_staging` は、前の節と同じ判断を `some ... in` で書いたものです。`some server in input.servers` で各サーバーを `server` に取り出し、次の行でその `env` を調べています。添字の参照を何度も書かずに済むので、読みやすくなります。
+
+`some i, server in input.servers` のように変数を 2 つ書くと、1 つ目に添字、2 つ目に要素が当てはめられます。
+
+後半のクエリのように、`some ... in` は配列のほか、オブジェクトや集合にも使えます。
+
+| 書き方 | 配列 | オブジェクト | 集合 |
+| --- | --- | --- | --- |
+| `some x in 値` | `x` に要素 | `x` に値 | `x` に要素 |
+| `some k, x in 値` | `k` に添字、`x` に要素 | `k` にキー、`x` に値 | `k` と `x` に要素 |
+
+この本では、これ以降、要素を 1 つずつ調べるときは主に `some ... in` を使います。`in` には、値が含まれるかを調べる使い方もあります。そちらは「キーワードの整理」の章で説明します。
+
+## 複数の反復を組み合わせる
+
+1 つのルール本体に、反復を複数書けます。
+
+{{< file variables-references/joins/policy.rego >}}
+
+{{< run variables-references/joins >}}
+
+`prod_https` は、本番環境のサーバーの中に、443 番ポートを使うものがあるかを調べています。まず `some server in input.servers` で各サーバーを取り出し、`env` が `"prod"` のものに絞ります。次に、そのサーバーの `ports` から `some port in server.ports` でポートを取り出し、`443` と比べています。すべての式が同時に成り立つ `server` と `port` の組み合わせが見つかれば、条件が成り立ちます。
+
+`db_owner` は、`db-1` を担当するチームの名前を求めています。チームを `team` に、そのチームが担当するサーバーの名前を `name` に取り出し、`name` が `"db-1"` になる組み合わせを探します。見つかった `team` の `name` が、ルールの値になります。
+
+`db_owner` は値が 1 つに決まるルールなので、条件を満たすチームが複数あって名前が異なると、エラーになります。条件を満たす値をすべて集めるルールは、「ルール」の章で説明します。
+
+### 同じ配列どうしを組み合わせる
+
+同じ配列から要素を 2 回取り出して、要素どうしを比べることもできます。次のルールは、名前が重複しているサーバーがあるかを調べます。
+
+{{< file variables-references/self-join/policy.rego >}}
+
+{{< run variables-references/self-join >}}
+
+`a` と `b` には、それぞれサーバーが 1 つずつ当てはめられます。`i != j` で同じ要素どうしの組み合わせを除き、名前が等しい組み合わせを探しています。`dup.json` では 1 番目と 3 番目のサーバーの名前が同じなので、`true` になりました。
+
+## 集合に値が含まれるかを調べる
+
+前の章で予告した、集合に値が含まれるかを調べる方法です。集合に対して `集合[値]` と参照すると、その値が集合に含まれていれば値そのものが返り、含まれていなければ undefined になります。
+
+{{< file variables-references/set-lookup/policy.rego >}}
+
+{{< file variables-references/set-lookup/alice.json >}}
+
+{{< run variables-references/set-lookup >}}
+
+後半の 2 つのクエリのように、`admins["alice"]` は `"alice"` を返し、`admins["carol"]` は undefined になります。
+
+ルール本体の `admins[input.user]` は、`input.user` が `"alice"` なので `"alice"` を返します。ここで、ルール本体の式がいつ成り立つかを整理しておきます。式は、値が undefined でも `false` でもなければ成り立ちます。`"alice"` は `false` ではないので、`is_admin` の条件は成り立ちます。
+
+`grants` は、ユーザー名と操作の組を配列にして、その配列を要素にした集合です。`grants[[input.user, input.action]]` は、`["alice", "write"]` という配列が `grants` に含まれるかを調べています。含まれていないので、`allow` は undefined になり、結果に含まれていません。
+
+`has_any_grant` の `grants[[input.user, _]]` のように、配列の一部に `_` を書くと、「`alice` を含む組がどれか 1 つでもあるか」を調べられます。
+
+## まとめ
+
+- ルール本体では `:=` で変数に値を代入できます。代入は 1 回だけです。
+- 参照の中に変数を書くと、式が成り立つ値が探されます。ルール本体では、成り立つ値が 1 つでもあれば条件が成り立ちます。
+- `some x in 値` で、配列・オブジェクト・集合の要素を 1 つずつ取り出せます。反復を複数書くと、すべての式が同時に成り立つ組み合わせが探されます。
+- ルール本体の式は、値が undefined でも `false` でもなければ成り立ちます。`集合[値]` は、値が含まれていれば成り立ちます。

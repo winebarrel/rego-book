@@ -1,0 +1,4 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.servers'
+opa eval --format pretty 'some x in ["a", "b"]'
+opa eval --format pretty 'some i, x in ["a", "b"]'
+opa eval --format pretty 'some k, v in {"x": 1, "y": 2}'

@@ -1,0 +1,3 @@
+opa eval -i input.json --format pretty 'input.servers[i].name'
+opa eval -i input.json --format pretty 'input.servers[i].env == "prod"'
+opa eval -i input.json --format pretty 'input.servers[_].name'
