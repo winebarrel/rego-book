@@ -27,6 +27,7 @@ book:
         - chapters/rules.qmd
         - chapters/negation.qmd
         - chapters/universal.qmd
+        - chapters/modules.qmd
 
 lang: ja
 

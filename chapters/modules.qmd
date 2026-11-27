@@ -1,0 +1,75 @@
+# モジュール {#sec-modules}
+
+これまでの例では、ポリシーを 1 つのファイルに書いてきました。ポリシーが大きくなると、複数のファイルに分けたくなります。この章では、Rego のファイルの構成要素であるコメント・パッケージ・インポートと、複数のファイルを組み合わせる方法を説明します。
+
+Rego では、1 つのファイルをモジュールと呼びます。モジュールは、1 つの `package`、0 個以上の `import`、0 個以上のルールでできています。
+
+## コメント
+
+`#` から行末まではコメントです。行の途中から書くこともできます。
+
+## パッケージ
+
+第 2 章で説明したとおり、`package` はルールが属する名前空間を決めます。パッケージ名は、`app.common` のようにドットで区切って階層にできます。パッケージ `app.common` のルール `is_admin` は、`data.app.common.is_admin` で参照します。
+
+次の 3 つのファイルを使います。
+
+{{< file modules/packages/common.rego >}}
+
+{{< file modules/packages/authz.rego >}}
+
+{{< file modules/packages/authz_message.rego >}}
+
+`authz.rego` の `allow` は、別のパッケージのルールを `data.app.common.is_admin` と参照しています。同じパッケージのルールはルール名だけで参照できましたが、別のパッケージのルールは `data` から始まる参照で指定します。
+
+`authz.rego` と `authz_message.rego` は、同じ `package app.authz` です。同じパッケージを宣言したファイルのルールは、1 つのパッケージにまとめられます。
+
+`opa eval` の `-d` を複数書くと、それぞれのファイルが読み込まれます。
+
+{{< file modules/packages/input.json >}}
+
+{{< run modules/packages >}}
+
+`data.app` を評価すると、パッケージの階層どおりに入れ子になったオブジェクトが返りました。`data.app.authz` には、2 つのファイルで定義した `allow` と `message` がまとめられています。
+
+## インポート
+
+別のパッケージのルールを何度も参照する場合、毎回 `data.app.common.is_admin` と書くのは手間がかかります。`import` を使うと、参照を短い名前で使えるようになります。
+
+{{< file modules/imports/authz.rego >}}
+
+`import` は `package` の後、ルールより前に書きます。
+
+| 書き方 | 意味 |
+| --- | --- |
+| `import data.app.common` | `common` で `data.app.common` を参照できる |
+| `import data.app.common as shared` | `shared` で `data.app.common` を参照できる |
+| `import data.roles` | `roles` で `data.roles` を参照できる |
+| `import input.user` | `user` で `input.user` を参照できる |
+
+`import` した名前は、参照の最後の部分（`data.app.common` なら `common`）になります。`as` を使うと、別の名前を付けられます。同じパッケージのルールと名前がぶつかるときや、短い名前にしたいときに使います。
+
+### データを読み込む
+
+`import data.roles` の `data.roles` は、ルールではなく、JSON ファイルから読み込んだデータです。「OPA・Rego・Conftest の関係」の章で説明したとおり、OPA は判断に入力（`input`）とデータ（`data`）を使います。`opa eval` の `-d` に JSON ファイルを指定すると、その内容がデータとして読み込まれます。
+
+{{< file modules/imports/roles.json >}}
+
+{{< run modules/imports >}}
+
+1 つ目のコマンドのように、`roles.json` の内容は `data` の直下に読み込まれ、`data.roles` で参照できます。ポリシーのルールも、読み込んだデータも、同じ `data` の下に置かれます。
+
+2 つ目のコマンドでは、`roles[user.role]` が `data.roles["admin"]` になり、`permissions` の値は `["read", "write"]` になりました。
+
+ユーザーと役割の対応のように、判断のたびには変わらない情報はデータとして用意しておき、ポリシーから参照します。
+
+### キーワードのインポート
+
+「否定」の章で使った `import future.keywords.not` は、データではなく、言語の機能を有効にするインポートです。`future.keywords` で始まるインポートは、将来の標準になる予定のキーワードや挙動を、そのモジュールで先に使えるようにします。
+
+## まとめ
+
+- 1 つのファイルをモジュールと呼び、`package`、`import`、ルールでできています。
+- パッケージ名はドットで階層にでき、ルールは `data.パッケージ名.ルール名` で参照します。同じパッケージを宣言したファイルのルールはまとめられます。
+- `import` で、`data` や `input` の参照を短い名前で使えます。`as` で名前を変えられます。
+- `opa eval -d` に JSON ファイルを指定すると、データとして `data` の下に読み込まれます。
