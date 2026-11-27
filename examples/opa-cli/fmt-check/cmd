@@ -1,0 +1,3 @@
+opa fmt --list messy.rego
+opa fmt messy.rego
+opa check broken.rego
