@@ -1,0 +1,29 @@
+{
+  "servers": [
+    {
+      "name": "web-1",
+      "env": "prod",
+      "ports": [80, 443]
+    },
+    {
+      "name": "web-2",
+      "env": "staging",
+      "ports": [80]
+    },
+    {
+      "name": "db-1",
+      "env": "prod",
+      "ports": [5432]
+    }
+  ],
+  "teams": [
+    {
+      "name": "frontend",
+      "servers": ["web-1", "web-2"]
+    },
+    {
+      "name": "data",
+      "servers": ["db-1"]
+    }
+  ]
+}
