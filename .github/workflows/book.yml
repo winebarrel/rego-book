@@ -15,12 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: OPA と Conftest をインストール
+      - name: Install OPA and Conftest
         run: |
           scripts/install-tools.sh "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: サンプルの整形を確認
+      - name: Check formatting of examples
         run: scripts/check-examples.sh
 
       - uses: quarto-dev/quarto-actions/setup@v2
@@ -28,8 +28,8 @@ jobs:
           version: 1.11.9
           tinytex: true
 
-      # pre-render で scripts/gen-outputs.sh が実行され、サンプルの出力が作られる。
-      - name: 本をビルド
+      # scripts/gen-outputs.sh runs as a pre-render step and generates the outputs of the examples.
+      - name: Build book
         run: quarto render
 
       - uses: actions/upload-pages-artifact@v5
