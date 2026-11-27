@@ -1,3 +1,11 @@
+/*
+ * 見出しの中のインラインコードは、darkly でもライト用の背景色（#f8f9fa）のままで、白い文字が読めない。
+ * Quarto が本文（p, li, td）のインラインコードに付ける背景色に合わせる。
+ */
+.quarto-dark :is(h1, h2, h3, h4, h5, h6) code:not(.sourceCode) {
+  background-color: rgba(67, 67, 67, 0.65);
+}
+
 /* コマンドと出力のブロック（console）は、ライト・ダークどちらのテーマでもターミナル風の黒背景にする */
 div.sourceCode:has(> pre.console),
 pre.console {
