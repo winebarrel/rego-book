@@ -1,0 +1,90 @@
+# Kubernetes マニフェスト {#sec-kubernetes}
+
+ここからの 3 つの章では、Conftest で実際の設定ファイルを検査します。どの章も、前半の「ドメインの情報」で検査する対象の構造を説明し、後半の「Rego の書き方」でポリシーを説明します。前半は Rego と関係なく、その対象を知っている人なら読み飛ばせる内容です。
+
+この章では、Kubernetes のマニフェストを検査します。
+
+## ドメインの情報: マニフェストの構造
+
+Kubernetes では、アプリケーションの構成をマニフェストという YAML のファイルに書きます。マニフェストの各ドキュメントは、1 つのリソース（Kubernetes が管理するもの）を表します。どのリソースにも、次の項目があります。
+
+| 項目 | 内容 |
+| --- | --- |
+| `apiVersion` | リソースの API のバージョン（`v1`、`apps/v1` など） |
+| `kind` | リソースの種類（`Pod`、`Deployment`、`Service` など） |
+| `metadata` | 名前（`name`）やラベル（`labels`）など |
+| `spec` | リソースの内容。種類ごとに構造が違う |
+
+コンテナを動かすリソースのうち、Pod はコンテナを直接定義します。Deployment などは、Pod の雛形（テンプレート）を持ち、そこから Pod を作ります。そのため、コンテナの一覧が置かれる場所が違います。
+
+| 種類 | コンテナの一覧の場所 |
+| --- | --- |
+| Pod | `spec.containers` |
+| Deployment、StatefulSet、DaemonSet、ReplicaSet、Job | `spec.template.spec.containers` |
+
+コンテナの主な項目は次のとおりです。
+
+| 項目 | 内容 |
+| --- | --- |
+| `name` | コンテナの名前 |
+| `image` | コンテナイメージ。`レジストリ/名前:タグ` の形で、タグを省略すると `latest` になる |
+| `resources.limits` | CPU やメモリの使用量の上限 |
+| `securityContext.privileged` | `true` にすると、コンテナがホストのほぼすべての権限を持つ |
+
+検査するマニフェストです。4 つのドキュメントを `---` で区切っています。
+
+{{< file kubernetes/manifests/manifests.yaml >}}
+
+- `web` の Deployment は、イメージのタグを固定し、メモリの上限を設定しています。
+- `batch` の Deployment は、タグが `latest` で、特権コンテナ（`privileged: true`）を使い、メモリの上限がありません。`metadata.labels` もありません。
+- `debug` の Pod は、イメージ `busybox` にタグがなく、メモリの上限もありません。
+- `web` の Service は、コンテナを持たないリソースです。
+
+## Rego の書き方
+
+次の 4 つの決まりを検査します。
+
+- 特権コンテナを使わない（失敗）
+- コンテナにメモリの上限を設定する（失敗）
+- イメージのタグを固定し、`latest` を使わない（失敗）
+- Deployment などに `app` ラベルを付ける（警告）
+
+{{< file kubernetes/manifests/policy/main.rego >}}
+
+### コンテナを取り出す補助のルール
+
+コンテナの一覧の場所は種類によって違うので、`containers` という補助のルールで違いを吸収しています。`containers` は、「ルール」の章で説明した集合を作るルールで、2 つの定義に分けて書いています。
+
+- 1 つ目の定義は、`kind` が `Pod` のとき、`spec.containers` からコンテナを集めます。
+- 2 つ目の定義は、`kind` が `workload_kinds` に含まれるとき、`spec.template.spec.containers` から集めます。
+
+2 つの定義の結果は合わせられるので、`containers` には、どの種類でもそのリソースのコンテナが集まります。Service のようにコンテナを持たないリソースでは、`containers` は空の集合になり、コンテナについての `deny` はどれも成り立ちません。
+
+`deny` の各ルールは、`some c in containers` でコンテナを 1 つずつ取り出して調べています。種類による違いを気にせずに書けます。
+
+`containers` と `name` は、名前が `deny` や `warn` で始まらないので、前の章までに説明したとおり、Conftest の結果には表示されません。
+
+### 各ルール
+
+- 特権コンテナの検査は、`c.securityContext.privileged == true` で書いています。`securityContext` がないコンテナでは参照が undefined になり、条件は成り立ちません。
+- メモリの上限の検査は、`not c.resources.limits.memory` で、値がないことを調べています。「否定」の章で説明したとおり、途中の `resources` や `limits` がない場合も、`not` は成り立ちます。
+- タグの検査は、関数 `has_fixed_tag` で書いています。`regex.match` で、イメージの最後の `/` より後ろに `:タグ` があるかを調べ、さらに `:latest` で終わらないことを調べています。`registry.example.com:5000/web` のように、レジストリにポート番号が付いていても誤判定しません。
+- ラベルの検査は `warn` にしています。守ってほしいが、守らなくても動作に問題はない決まりは、警告にしておくと段階的に導入しやすくなります。
+
+メッセージには、`{input.kind}/{name}` とコンテナ名を入れています。1 つのファイルに複数のリソースがあっても、どのリソースのどのコンテナの問題かが分かります。
+
+### 検査とテスト
+
+{{< file kubernetes/manifests/policy/main_test.rego >}}
+
+{{< run kubernetes/manifests >}}
+
+`conftest test` は、`batch` の Deployment と `debug` の Pod の問題を報告し、`web` の Deployment と Service については何も報告していません。
+
+テストでは、特権コンテナの Pod が `deny` されることと、決まりを守った Deployment で `deny` と `warn` が空になることを確かめています。ポリシーを変えたときに、守っている設定まで失敗にしてしまう誤りに気づけます。
+
+## まとめ
+
+- Kubernetes のマニフェストは、`apiVersion`、`kind`、`metadata`、`spec` を持ちます。コンテナの一覧の場所は、Pod と Deployment などで違います。
+- 種類による違いは、集合を作る補助のルールで吸収すると、検査のルールを種類によらず書けます。
+- メッセージにリソースの種類と名前を入れると、どこの問題かが分かります。
