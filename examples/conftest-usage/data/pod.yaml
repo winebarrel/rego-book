@@ -2,4 +2,6 @@ kind: Pod
 spec:
   containers:
     - name: app
+      image: ghcr.io/example/app:1.4.2
+    - name: proxy
       image: docker.io/library/nginx:1.27

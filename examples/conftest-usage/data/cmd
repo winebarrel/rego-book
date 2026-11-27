@@ -1,1 +1,2 @@
+opa eval -d data --format pretty 'data'
 conftest test -d data pod.yaml

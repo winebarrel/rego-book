@@ -48,7 +48,7 @@ Conftest は、ファイルの拡張子からパーサー（ファイルを読�
 
 `-d` でディレクトリを指定すると、その中の JSON や YAML のファイルがデータとして読み込まれます。データのパスは、`opa eval -d` と同じく、ディレクトリの名前で決まります。
 
-{{< file conftest-usage/data/data/registries.json >}}
+{{< file conftest-usage/data/data/registries/data.json >}}
 
 {{< file conftest-usage/data/pod.yaml >}}
 
@@ -56,7 +56,9 @@ Conftest は、ファイルの拡張子からパーサー（ファイルを読�
 
 {{< run conftest-usage/data >}}
 
-`data/registries.json` の内容は `data.registries` として参照できます。許可するレジストリの一覧をデータに分けておくと、ポリシーを変えずに一覧だけを更新できます。
+1 つ目のコマンドのように、`data/registries/data.json` の内容は、ディレクトリの名前から `data.registries` に読み込まれます。`-d` に指定したディレクトリ（`data`）の名前はパスに含まれません。また、ファイルを `data/registries.json` のように置くと、ファイル名はパスにならず、内容は `data` の直下に読み込まれます。
+
+2 つ目のコマンドでは、許可した `ghcr.io` のイメージを使う `app` は通り、`docker.io` のイメージを使う `proxy` だけが失敗しました。許可するレジストリの一覧をデータに分けておくと、ポリシーを変えずに一覧だけを更新できます。
 
 ## 結果の表示と終了コード
 
