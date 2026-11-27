@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.access'
+opa eval -d policy.rego -i input.json -s input.schema.json --format pretty 'data.access'

@@ -34,6 +34,7 @@ book:
         - chapters/operators.qmd
         - chapters/builtins.qmd
         - chapters/metadata.qmd
+        - chapters/schema-strict.qmd
 
 lang: ja
 
