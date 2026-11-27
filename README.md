@@ -33,6 +33,8 @@ quarto render --to html # Web 版だけを作る
 | `_extensions/example/` | サンプルを本文に埋め込むショートコード |
 | `scripts/` | サンプルの実行・確認、CI 用のスクリプト |
 | `assets/rego.xml` | Rego のシンタックスハイライトの定義 |
+| `assets/console.xml` | コマンドと出力のブロックのハイライトの定義 |
+| `assets/book.css` | Web 版のスタイル |
 | `OUTLINE.md` | 章立て案と執筆方針 |
 
 ## サンプルの書き方

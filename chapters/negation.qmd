@@ -12,6 +12,10 @@
 
 {{< file negation/basic/suspended.json >}}
 
+{{< file negation/basic/active.json >}}
+
+{{< file negation/basic/missing.json >}}
+
 {{< run negation/basic >}}
 
 `suspended.json` では、`input.user.suspended` が `true` なので `suspended` も `true` になり、`not suspended` は成り立ちません。そのため `allow` は undefined です。
@@ -49,7 +53,7 @@
 
 {{< run negation/difference >}}
 
-`owned` は、いずれかのチームが担当しているサーバー名の集合です。`unowned` では、各サーバーについて `not owned[server.name]` を調べています。前の章で説明したとおり、`owned[server.name]` は名前が集合に含まれないと undefined になるので、`not` を付けると成り立ちます。
+`owned` は、いずれかのチームが担当しているサーバー名の集合です。`unowned` では、各サーバーについて `not owned[server.name]` を調べています。「変数と参照」の章で説明したとおり、`owned[server.name]` は名前が集合に含まれないと undefined になるので、`not` を付けると成り立ちます。
 
 ## `not` の中の変数
 

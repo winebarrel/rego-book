@@ -1,8 +1,7 @@
 package servers
 
 all_short_names if {
-	every i, server in input.servers {
-		i < 10
+	every server in input.servers {
 		count(server.name) <= 8
 	}
 }
