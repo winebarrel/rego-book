@@ -1,0 +1,1 @@
+opa eval -d common.rego -d authz.rego -d authz_message.rego -i input.json --format pretty 'data.app'

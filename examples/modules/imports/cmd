@@ -1,0 +1,2 @@
+opa eval -d roles.json --format pretty 'data.roles'
+opa eval -d common.rego -d authz.rego -d roles.json -i input.json --format pretty 'data.app.authz'
