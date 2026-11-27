@@ -1,0 +1,1 @@
+opa eval -d policy.rego -d roles.json -d conflict.json --format pretty 'data'
