@@ -31,6 +31,7 @@ book:
         - chapters/keywords.qmd
         - chapters/with-keyword.qmd
         - chapters/default-else.qmd
+        - chapters/operators.qmd
 
 lang: ja
 
