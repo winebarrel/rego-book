@@ -1,0 +1,3 @@
+opa eval -d policy.rego -i pro.json --format pretty 'data.quota.max_projects'
+opa eval -d policy.rego -i pro.json --format pretty 'data.quota'
+opa eval -d policy.rego -i free.json --format pretty 'data.quota.is_paid'
