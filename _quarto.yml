@@ -40,6 +40,7 @@ book:
         - chapters/opa-cli.qmd
         - chapters/conftest-internals.qmd
         - chapters/conftest-usage.qmd
+        - chapters/kubernetes.qmd
 
 lang: ja
 
