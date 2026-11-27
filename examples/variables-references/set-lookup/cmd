@@ -1,0 +1,3 @@
+opa eval -d policy.rego -i alice.json --format pretty 'data.access'
+opa eval -d policy.rego --format pretty 'data.access.admins["alice"]'
+opa eval -d policy.rego --format pretty 'data.access.admins["carol"]'
