@@ -1,0 +1,5 @@
+opa eval --format pretty '[1, 2] == [2, 1]'
+opa eval --format pretty '{1, 2} == {2, 1}'
+opa eval --format pretty '{"a": 1, "b": 2} == {"b": 2, "a": 1}'
+opa eval --format pretty 'count([1, 2, 2])'
+opa eval --format pretty 'count({1, 2, 2})'

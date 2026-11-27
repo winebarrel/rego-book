@@ -21,6 +21,7 @@ book:
       chapters:
         - chapters/first-policy.qmd
         - chapters/scalars-strings.qmd
+        - chapters/composite-values.qmd
 
 lang: ja
 

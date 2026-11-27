@@ -1,0 +1,1 @@
+opa eval -d policy.rego --format pretty 'data.network'
