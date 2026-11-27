@@ -26,7 +26,7 @@
 | 章 | 内容 | ドキュメントの見出し |
 | --- | --- | --- |
 | 2. はじめての Rego | `package`、ルール、`input`、`if`、undefined、AND と OR | The Basics |
-| 3. スカラー値と文字列 | 数値・真偽値・null、文字列、ローストリング、文字列補間、組み込み関数の呼び方 | Scalar Values, Strings |
+| 3. スカラー値と文字列 | 数値・真偽値・null、文字列、raw 文字列、文字列補間、組み込み関数の呼び方 | Scalar Values, Strings |
 | 4. 複合値 | 配列、オブジェクト、集合 | Composite Values |
 | 5. 変数と参照 | 変数、参照、反復（`some`）、`_`、複数の式による結合 | Variables, References |
 | 6. 内包表記 | 配列・オブジェクト・集合の内包表記 | Comprehensions |

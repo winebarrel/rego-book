@@ -78,7 +78,7 @@ Conftest は、ファイルの拡張子からパーサー（ファイルを読�
 
 {{< file conftest-usage/verify/policy/main_test.rego >}}
 
-`parse_config` は、Conftest が追加している組み込み関数です。1 つ目の引数のパーサーで、2 つ目の引数の文字列を値に変換します。テストの中に YAML をそのまま書いて、`conftest test` で読み込んだときと同じ `input` を作れます。YAML はインデントが意味を持つので、改行をそのまま書けるローストリングを使っています。
+`parse_config` は、Conftest が追加している組み込み関数です。1 つ目の引数のパーサーで、2 つ目の引数の文字列を値に変換します。テストの中に YAML をそのまま書いて、`conftest test` で読み込んだときと同じ `input` を作れます。YAML はインデントが意味を持つので、改行をそのまま書ける raw 文字列を使っています。
 
 `deny["web: Deployment must have labels"]` は、「変数と参照」の章で説明した集合の参照です。`deny` にそのメッセージが含まれていれば成り立ちます。`count(deny) == 0` は、`deny` が空であることを調べています。
 

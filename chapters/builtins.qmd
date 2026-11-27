@@ -53,7 +53,7 @@
 
 {{< run builtins/functions >}}
 
-- `images_from_registry` は、`regex.match` で、すべてのイメージが `registry.example.com/` で始まるかを調べています。正規表現は、バックスラッシュをそのまま書けるローストリングで書いています。
+- `images_from_registry` は、`regex.match` で、すべてのイメージが `registry.example.com/` で始まるかを調べています。正規表現は、バックスラッシュをそのまま書ける raw 文字列で書いています。
 - `total_memory_bytes` は、`units.parse_bytes` で `"512Mi"` などをバイト数に変換し、`sum` で合計しています。`total_memory_gib` は、それを 1 GiB のバイト数で割っています。
 - `pull_policy` は、`object.get` で `imagePullPolicy` を取り出し、キーがなければ `"IfNotPresent"` を返す関数です。`sidecar` にはキーがないので `"IfNotPresent"` になりました。
 - `summary` は、`sprintf` で文字列を組み立てています。`%d` は整数、`%v` は任意の値、`%s` は文字列を埋め込む書式です。
