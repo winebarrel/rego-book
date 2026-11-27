@@ -1,0 +1,3 @@
+opa eval -d policy.rego -d roles.json --format pretty 'data.access.allow with input as {"user": {"role": "admin"}}'
+opa eval -d policy.rego -d roles.json --format pretty 'data.access.allow with input as {"user": {"role": "viewer"}}'
+opa eval -d policy.rego -d roles.json --format pretty 'data.access.allow with input as {"user": {"role": "viewer"}} with data.roles.viewer as ["read", "write"]'

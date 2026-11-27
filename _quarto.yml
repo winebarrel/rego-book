@@ -29,6 +29,7 @@ book:
         - chapters/universal.qmd
         - chapters/modules.qmd
         - chapters/keywords.qmd
+        - chapters/with-keyword.qmd
 
 lang: ja
 

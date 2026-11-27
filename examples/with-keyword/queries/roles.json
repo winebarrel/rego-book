@@ -1,0 +1,6 @@
+{
+  "roles": {
+    "admin": ["read", "write"],
+    "viewer": ["read"]
+  }
+}

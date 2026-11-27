@@ -1,0 +1,1 @@
+opa eval -d policy.rego -d roles.json -i input.json --format pretty 'data.access'
