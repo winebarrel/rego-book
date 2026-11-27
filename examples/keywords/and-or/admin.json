@@ -1,0 +1,9 @@
+{
+  "user": {
+    "admin": true,
+    "owner": false
+  },
+  "doc": {
+    "reviewed": false
+  }
+}

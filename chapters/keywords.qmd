@@ -1,0 +1,91 @@
+# キーワードの整理 {#sec-keywords}
+
+ここまでの章で、`if`、`contains`、`some`、`in`、`every`、`not` などのキーワードを、必要になった場面で少しずつ使ってきました。この章では、まだ説明していない使い方として、`in` による値が含まれるかの判定、`if` の省略形、`and` と `or` を説明します。最後に、これまでのキーワードを一覧にまとめます。
+
+## `in` で値が含まれるかを調べる
+
+`some x in 値` の `in` は反復に使いました。`some` を付けずに `値 in コレクション` と書くと、値が含まれるかを調べる式になります。
+
+{{< run keywords/in-queries >}}
+
+配列と集合では、要素に含まれるかを調べます。オブジェクトでは、キーではなく値に含まれるかを調べます。`"admin"` は値なので `true`、`"role"` はキーなので `false` になりました。
+
+最後のように `キー, 値 in オブジェクト` と書くと、そのキーと値の組が含まれるかを調べられます。配列では `添字, 要素 in 配列` の形になります。
+
+`in` の式は、含まれないときに undefined ではなく `false` になります。3 つ目の `"ops"` は含まれないので `false` です。
+
+### ポリシーの中で使う
+
+{{< file keywords/in-policy/policy.rego >}}
+
+{{< file keywords/in-policy/input.json >}}
+
+{{< run keywords/in-policy >}}
+
+`is_read` は、メソッドが `read_methods` に含まれるかを調べています。`"POST"` は含まれないので、`is_read` は undefined です。
+
+`is_unknown_role` のように `not` と組み合わせると、含まれないことを調べられます。`in` は関数の呼び出しと同じように扱われるので、「否定」の章で説明した `import future.keywords.not` を書いています。このインポートがないと、入力に `role` がないときに `not` が成り立ちません。
+
+`is_read_value` は、`in` の式の値をそのままルールの値にしています。含まれないので `false` になりました。ルール本体の条件として使う場合と違い、`false` という値が得られます。
+
+「変数と参照」の章では、集合に値が含まれるかを `集合[値]` で調べました。`in` は、配列やオブジェクトにも使えること、結果が `true` か `false` になることが違います。
+
+## `if` の省略形
+
+ルール本体の式が 1 つだけのときは、波かっこを省略して `if` の後に直接書けます。
+
+{{< file keywords/if-short/policy.rego >}}
+
+{{< file keywords/if-short/input.json >}}
+
+{{< run keywords/if-short >}}
+
+`is_admin if input.user.role == "admin"` は、`is_admin if { input.user.role == "admin" }` と同じ意味です。`names contains server.name if some server in input.servers` のように、`some ... in` の 1 行も書けます。
+
+式が 2 つ以上あるときは、これまでどおり波かっこで囲みます。
+
+## `and` と `or`
+
+ルール本体の式は、改行で区切ると AND になりました。OR を表すには、同じ名前のルールを複数定義していました。`and` と `or` を使うと、1 つの式の中で AND と OR を組み合わせられます。
+
+{{< file keywords/and-or/policy.rego >}}
+
+`and` と `or` を使うには、`import future.keywords.and` と `import future.keywords.or` を書きます。
+
+{{< file keywords/and-or/admin.json >}}
+
+{{< run keywords/and-or >}}
+
+`can_edit` は、管理者か所有者であれば成り立ちます。どちらの入力でも成り立ちました。
+
+`can_publish` と `can_publish_grouped` は、かっこの有無だけが違います。`and` は `or` より先に結び付くので、`can_publish` は「管理者である」または「所有者で、かつレビュー済みである」という意味になります。`admin.json` は管理者なので成り立ち、`owner.json` はレビュー済みでないので成り立ちません。
+
+`can_publish_grouped` はかっこで `or` を先にまとめているので、「管理者か所有者で、かつレビュー済みである」という意味です。どちらの入力もレビュー済みでないので、成り立ちません。
+
+`and` と `or` の式は、成り立つか成り立たないかだけを表し、値を持ちません。そのため、変数に代入したり、ルールの値にしたりはできません。値を返すルールで条件を分けたいときは、これまでどおり同じ名前のルールを複数定義します。
+
+`and` と `or` は OPA 1.20.0 で追加されたキーワードです。Conftest 0.71.1（組み込まれている OPA は 1.21.1）でも使えます。
+
+## キーワードの一覧
+
+これまでに説明したキーワードをまとめます。
+
+| キーワード | 使い方 | 説明した章 |
+| --- | --- | --- |
+| `package` | `package app.authz` | はじめての Rego、モジュール |
+| `import` | `import data.roles` | 否定、モジュール |
+| `if` | `ルール if { 本体 }`、`ルール if 式` | はじめての Rego、この章 |
+| `contains` | `ルール contains 値 if { 本体 }` | ルール |
+| `some` | `some i`、`some x in 値` | 変数と参照 |
+| `in` | `some x in 値`、`値 in コレクション` | 変数と参照、この章 |
+| `every` | `every x in 値 { 本体 }` | 全称量化 |
+| `not` | `not 式` | 否定 |
+| `and`、`or` | `式 and 式`、`式 or 式` | この章 |
+
+残りの `with`、`default`、`else` は、次の 2 つの章で説明します。
+
+## まとめ
+
+- `値 in コレクション` は、値が含まれるかを `true` か `false` で返します。オブジェクトでは値を調べ、`キー, 値 in オブジェクト` でキーと値の組を調べます。
+- ルール本体の式が 1 つなら、`ルール if 式` と波かっこを省略できます。
+- `and` と `or` で、1 つの式の中で条件を組み合わせられます。`and` は `or` より先に結び付きます。

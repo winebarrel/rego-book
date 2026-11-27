@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i admin.json --format pretty 'data.docs'
+opa eval -d policy.rego -i owner.json --format pretty 'data.docs'

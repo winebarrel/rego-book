@@ -1,0 +1,9 @@
+{
+  "user": {
+    "role": "admin"
+  },
+  "servers": [
+    {"name": "web-1"},
+    {"name": "db-1"}
+  ]
+}
