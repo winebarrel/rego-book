@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i ok.json --format pretty 'data.servers.all_tls'
+opa eval -d policy.rego -i ng.json --format pretty 'data.servers.all_tls'

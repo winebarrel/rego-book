@@ -1,0 +1,10 @@
+{
+  "servers": [
+    {"name": "web-1"},
+    {"name": "database-1"}
+  ],
+  "labels": {
+    "team": "platform",
+    "env": "prod"
+  }
+}

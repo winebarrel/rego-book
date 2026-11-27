@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i empty.json --format pretty 'data.servers'
+opa eval -d policy.rego -i missing.json --format pretty 'data.servers'
