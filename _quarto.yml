@@ -30,6 +30,7 @@ book:
         - chapters/modules.qmd
         - chapters/keywords.qmd
         - chapters/with-keyword.qmd
+        - chapters/default-else.qmd
 
 lang: ja
 
