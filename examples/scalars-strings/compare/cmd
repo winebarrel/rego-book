@@ -1,0 +1,3 @@
+opa eval --format pretty '8080 == 8080.0'
+opa eval --format pretty '8080 == "8080"'
+opa eval --format pretty '"apple" < "banana"'
