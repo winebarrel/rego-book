@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i admin.json --format pretty 'data.quota'
+opa eval -d policy.rego -i guest.json --format pretty 'data.quota'

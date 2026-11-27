@@ -1,0 +1,3 @@
+opa eval -d policy.rego -i pro.json --format pretty 'data.quota'
+opa eval -d policy.rego -i trial.json --format pretty 'data.quota'
+opa eval -d policy.rego -i none.json --format pretty 'data.quota'

@@ -1,0 +1,76 @@
+# `default` と `else` {#sec-default-else}
+
+Rego のルールは、条件が成り立たないと undefined になりました。判断の結果を受け取る側にとっては、`allow` が undefined よりも `false` のほうが扱いやすいことがあります。この章では、条件が成り立たないときの値を決める `default` と、条件を順番に試す `else` を説明します。
+
+## `default`
+
+`default ルール名 := 値` と書くと、そのルールのどの定義の条件も成り立たないときの値（既定値）を決められます。
+
+{{< file default-else/default/policy.rego >}}
+
+{{< file default-else/default/guest.json >}}
+
+{{< run default-else/default >}}
+
+`admin.json` では、`allow` と `max_projects` の条件が成り立つので、それぞれの定義の値 `true` と `100` になりました。
+
+`guest.json` では、どちらの条件も成り立ちません。`default` がなければ 2 つのルールは undefined になり、結果に含まれませんでしたが、ここでは既定値の `false` と `3` になっています。
+
+`default` は、値が 1 つに決まるルール（単一値ルール）に付けられます。`contains` で集合を作るルールには付けられません。集合を作るルールは、もともと条件を満たす値がなければ空の集合になるからです。
+
+### 関数の既定値
+
+関数にも既定値を付けられます。
+
+{{< file default-else/default-function/policy.rego >}}
+
+{{< run default-else/default-function >}}
+
+`default label(_) := "unknown"` は、どの定義の条件も成り立たないときに `label` が `"unknown"` を返すことを表します。引数の `_` は、既定値ではどんな引数でも受け付けることを表しています。
+
+### 既定値に使える値
+
+既定値には、入力やほかのルールを参照する値は使えません。
+
+{{< file default-else/default-ref/policy.rego >}}
+
+{{< run default-else/default-ref >}}
+
+既定値は、入力やデータによらず決まる定数でなければなりません。入力によって既定値を変えたい場合は、次の節の `else` を使うか、条件を分けたルールを書きます。
+
+## `else`
+
+単一値ルールを複数定義したとき、条件が同時に成り立って値が異なるとエラーになりました。条件に優先順位を付けたいときは、`else` を使います。
+
+{{< file default-else/else/policy.rego >}}
+
+`plan` は、次の順に条件を試します。
+
+1. `input.user.plan` が `"pro"` なら `"pro"`
+2. そうでなく、`input.user.trial` が成り立つなら `"trial"`
+3. どちらでもなければ `"free"`
+
+{{< file default-else/else/pro.json >}}
+
+{{< run default-else/else >}}
+
+`pro.json` は、`plan` が `"pro"` で、`trial` も `true` です。2 つの条件が両方とも成り立ちますが、`else` は前の条件が成り立てば後ろを試さないので、エラーにならずに `"pro"` になりました。
+
+`trial.json` は 1 つ目の条件が成り立たず、2 つ目が成り立つので `"trial"` です。`none.json` はどちらも成り立たないので、最後の `else := "free"` の値になりました。最後の `else` のように条件を書かなければ、それより前の条件がどれも成り立たないときに、必ずその値になります。
+
+`is_pro` のように、真偽値のルールに `else := false` を付けると、条件が成り立たないときに `false` を返せます。`default is_pro := false` と書いた場合と同じ結果です。
+
+`else` でつないだ定義は、全体で 1 つの定義として扱われます。同じ名前のルールを `else` の外で別に定義すると、これまでどおり、条件が同時に成り立って値が異なればエラーになります。
+
+## `default` と `else` の使い分け
+
+| 書き方 | 向いている場面 |
+| --- | --- |
+| `default` | 条件の成り立たないときの値が定数で、条件どうしに優先順位がない |
+| `else` | 条件に優先順位がある。上から順に試したい |
+
+## まとめ
+
+- `default ルール名 := 値` で、どの定義の条件も成り立たないときの値を決められます。既定値は定数でなければなりません。
+- `else` でつなぐと、条件を上から順に試し、最初に成り立った条件の値になります。
+- `else` を使うと、条件が同時に成り立っても値の衝突によるエラーになりません。
