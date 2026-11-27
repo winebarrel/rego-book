@@ -1,0 +1,5 @@
+opa eval --format pretty '7 / 2'
+opa eval --format pretty '7 % 2'
+opa eval --format pretty '{"a", "b"} | {"b", "c"}'
+opa eval --format pretty '{"a", "b"} & {"b", "c"}'
+opa eval --format pretty '{"a", "b"} - {"b", "c"}'

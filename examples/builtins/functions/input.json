@@ -1,0 +1,15 @@
+{
+  "containers": [
+    {
+      "name": "app",
+      "image": "registry.example.com/app:1.2.0",
+      "memory": "512Mi",
+      "imagePullPolicy": "Always"
+    },
+    {
+      "name": "sidecar",
+      "image": "registry.example.com/proxy:3.0.1",
+      "memory": "1536Mi"
+    }
+  ]
+}

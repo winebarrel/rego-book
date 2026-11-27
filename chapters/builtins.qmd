@@ -1,0 +1,96 @@
+# 組み込み関数 {#sec-builtins}
+
+「スカラー値と文字列」の章で、組み込み関数の呼び出し方を説明しました。この章では、組み込み関数の名前空間、算術や集合の演算子、よく使う関数、実行時のエラーの扱いを説明します。
+
+## 名前空間
+
+組み込み関数には、`upper` や `count` のように名前だけのものと、`regex.match` や `time.now_ns` のようにドットで区切った名前のものがあります。ドットの前の部分は、関数の分類を表す名前空間です。例えば `regex` は正規表現、`time` は時刻、`units` は単位付きの値を扱う関数の名前空間です。
+
+呼び出し方は、名前空間のない関数と同じです。
+
+## 算術と集合の演算子
+
+数値の計算と集合の演算には、演算子を使います。演算子も、内部では組み込み関数として扱われます。
+
+{{< run builtins/operators >}}
+
+数値の演算子は `+`（足し算）、`-`（引き算）、`*`（掛け算）、`/`（割り算）、`%`（割り算の余り）です。集合の演算子は次の 3 つです。
+
+- `集合 | 集合`: 和集合（どちらかに含まれる要素）
+- `集合 & 集合`: 積集合（両方に含まれる要素）
+- `集合 - 集合`: 差集合（左にあって右にない要素）
+
+`7 / 2` が `3.5` になるように、Rego の数値は整数と小数を区別しないので、割り算の結果は小数になることがあります。
+
+## よく使う関数
+
+組み込み関数は約 200 個あります。ここでは、よく使うものを分類ごとに紹介します。
+
+| 分類 | 関数 | 説明 |
+| --- | --- | --- |
+| 集計 | `count(x)` | 要素の数 |
+| | `sum(配列)`、`max(配列)`、`min(配列)` | 合計、最大値、最小値 |
+| | `sort(配列)` | 並べ替えた配列 |
+| 文字列 | `concat(区切り, 配列)` | 配列の文字列を区切りでつなぐ |
+| | `split(文字列, 区切り)` | 文字列を区切りで分けた配列 |
+| | `sprintf(書式, 配列)` | 書式に従って文字列を作る |
+| | `startswith`、`endswith`、`indexof`、`replace`、`trim_space` | 文字列の判定・検索・置換・整形 |
+| 正規表現 | `regex.match(パターン, 文字列)` | 正規表現に一致するか |
+| グロブ | `glob.match(パターン, 区切り, 文字列)` | `*` などのワイルドカードに一致するか |
+| オブジェクト | `object.get(オブジェクト, キー, 既定値)` | キーの値。キーがなければ既定値 |
+| | `object.keys(オブジェクト)` | キーの集合 |
+| 型 | `type_name(x)`、`is_string(x)` など | 値の型を調べる |
+| 変換 | `to_number(x)` | 数値に変換する |
+| | `json.unmarshal(文字列)`、`json.marshal(値)` | JSON の文字列と値を相互に変換する |
+| 単位 | `units.parse_bytes(文字列)` | `"4Gi"` のような値をバイト数に変換する |
+| 時刻 | `time.now_ns()`、`time.weekday(時刻)` | 現在時刻、曜日 |
+
+いくつかを組み合わせた例です。
+
+{{< file builtins/functions/policy.rego >}}
+
+{{< file builtins/functions/input.json >}}
+
+{{< run builtins/functions >}}
+
+- `images_from_registry` は、`regex.match` で、すべてのイメージが `registry.example.com/` で始まるかを調べています。正規表現は、バックスラッシュをそのまま書けるローストリングで書いています。
+- `total_memory_bytes` は、`units.parse_bytes` で `"512Mi"` などをバイト数に変換し、`sum` で合計しています。`total_memory_gib` は、それを 1 GiB のバイト数で割っています。
+- `pull_policy` は、`object.get` で `imagePullPolicy` を取り出し、キーがなければ `"IfNotPresent"` を返す関数です。`sidecar` にはキーがないので `"IfNotPresent"` になりました。
+- `summary` は、`sprintf` で文字列を組み立てています。`%d` は整数、`%v` は任意の値、`%s` は文字列を埋め込む書式です。
+
+すべての関数の一覧と詳しい説明は、OPA の公式ドキュメントの [Policy Reference](https://www.openpolicyagent.org/docs/policy-reference) にあります。
+
+## `sprintf` と文字列補間
+
+`sprintf` と文字列補間（`$"..."`）は、どちらも文字列に値を埋め込めます。違いは、埋め込む値が undefined のときです。
+
+{{< file builtins/sprintf/policy.rego >}}
+
+{{< file builtins/sprintf/input.json >}}
+
+{{< run builtins/sprintf >}}
+
+「スカラー値と文字列」の章で見たとおり、文字列補間は undefined の部分を `<undefined>` に置き換えて、文字列を作ります。一方、`sprintf` は引数の配列に undefined の値が含まれると、配列そのものが作れないので、結果全体が undefined になります。
+
+値が欠けていてもメッセージを出したい場合は文字列補間、値がそろっているときだけメッセージを作りたい場合は `sprintf` が合います。
+
+## 実行時のエラー
+
+組み込み関数は、引数の型が合わないと、評価の前の型検査でエラーになりました。一方、型は合っていても、値によっては評価の途中でエラーになることがあります。
+
+{{< file builtins/errors/policy.rego >}}
+
+{{< file builtins/errors/input.json >}}
+
+{{< run builtins/errors >}}
+
+`to_number("eighty")` は、数値に変換できないのでエラーになります。しかし、1 つ目のコマンドではエラーは表示されず、`port` が undefined になっただけでした。OPA は既定では、組み込み関数の実行時のエラーを、その式が undefined になったものとして扱います。
+
+2 つ目のコマンドのように `--strict-builtin-errors` を付けると、実行時のエラーで評価が止まり、エラーの内容が表示されます。ポリシーが期待どおりに動かないときは、このオプションを付けて評価してみると原因が分かることがあります。
+
+## まとめ
+
+- 組み込み関数には、`regex.match` のように名前空間付きの名前のものがあります。
+- 算術（`+` `-` `*` `/` `%`）と集合（`|`、`&`、`-`）の演算子があります。
+- `sprintf` は埋め込む値が undefined だと結果全体が undefined になり、文字列補間は `<undefined>` を埋め込みます。
+- 組み込み関数の実行時のエラーは、既定では undefined として扱われます。`--strict-builtin-errors` でエラーとして扱えます。
