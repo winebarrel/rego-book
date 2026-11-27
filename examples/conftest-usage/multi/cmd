@@ -1,0 +1,2 @@
+conftest parse manifests.yaml
+conftest test manifests.yaml

@@ -1,0 +1,2 @@
+conftest parse app.conf
+conftest parse --parser toml app.conf

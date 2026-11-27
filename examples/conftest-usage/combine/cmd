@@ -1,0 +1,2 @@
+conftest parse --combine deployment.yaml service.yaml
+conftest test --combine deployment.yaml service.yaml

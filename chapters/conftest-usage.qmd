@@ -1,0 +1,94 @@
+# Conftest の使い方 {#sec-conftest-usage}
+
+前の章では、Conftest がルールの値をどう扱うかを説明しました。この章では、`conftest test` の主なオプションと、ポリシーのテストを実行する `conftest verify` を説明します。
+
+## 入力のファイル
+
+`conftest test` には、検査するファイルを複数指定できます。ディレクトリを指定すると、その中のファイルがまとめて検査されます。ポリシーは、指定しなければ `policy` ディレクトリから読み込まれ、`-p` で別のディレクトリを指定できます。
+
+### 複数のドキュメントを含む YAML
+
+Kubernetes のマニフェストのように、1 つの YAML ファイルに `---` で区切った複数のドキュメントを書くことがあります。
+
+{{< file conftest-usage/multi/manifests.yaml >}}
+
+{{< file conftest-usage/multi/policy/main.rego >}}
+
+{{< run conftest-usage/multi >}}
+
+`conftest parse` では、2 つのドキュメントが配列として表示されます。しかし、`conftest test` は、ドキュメントを 1 つずつ別の `input` として評価します。そのため、ポリシーでは `input.kind` のように、1 つのドキュメントを対象に書けます。結果の「2 tests」は、2 つのドキュメントをそれぞれ評価した数です。
+
+### ファイルをまとめて評価する
+
+ファイルどうしの関係を調べたいときは、`--combine` を使います。
+
+{{< file conftest-usage/combine/deployment.yaml >}}
+
+{{< file conftest-usage/combine/service.yaml >}}
+
+{{< file conftest-usage/combine/policy/main.rego >}}
+
+{{< run conftest-usage/combine >}}
+
+`--combine` を付けると、すべてのファイルが 1 つの `input` にまとめられます。`input` は配列で、要素はファイルごとの `path`（ファイル名）と `contents`（内容）を持つオブジェクトです。
+
+このポリシーは、Deployment と同じ名前の Service があるかを調べています。`service_names` で Service の名前を集め、Deployment の名前が含まれていなければ失敗にしています。結果の 2 番目の列は、ファイル名ではなく `Combined` になります。
+
+### パーサーを指定する
+
+Conftest は、ファイルの拡張子からパーサー（ファイルを読み込んで `input` に変換する部分）を選びます。拡張子から形式が分からないときは、`--parser` で指定します。
+
+{{< file conftest-usage/parser/app.conf >}}
+
+{{< run conftest-usage/parser >}}
+
+`.conf` という拡張子からはパーサーが決まらないので、エラーになりました。`--parser toml` を付けると、TOML として読み込まれます。指定できるパーサーは `conftest test --help` で確認できます。
+
+## データを読み込む
+
+`-d` でディレクトリを指定すると、その中の JSON や YAML のファイルがデータとして読み込まれます。データのパスは、`opa eval -d` と同じく、ディレクトリの名前で決まります。
+
+{{< file conftest-usage/data/data/registries.json >}}
+
+{{< file conftest-usage/data/pod.yaml >}}
+
+{{< file conftest-usage/data/policy/main.rego >}}
+
+{{< run conftest-usage/data >}}
+
+`data/registries.json` の内容は `data.registries` として参照できます。許可するレジストリの一覧をデータに分けておくと、ポリシーを変えずに一覧だけを更新できます。
+
+## 結果の表示と終了コード
+
+`-o` で結果の表示形式を選べます。`--fail-on-warn` を付けると、警告でも 0 以外の終了コードで終わります。
+
+{{< file conftest-usage/output/policy/main.rego >}}
+
+{{< run conftest-usage/output >}}
+
+`-o table` は表の形で表示します。ほかに `json`、`junit`（CI のテスト結果の形式）、`github`（GitHub Actions の注釈の形式）、`sarif` などを選べます。
+
+`conftest test` は、失敗があると 1 で終わり、警告だけなら 0 で終わります。`--fail-on-warn` を付けると、警告だけでも 1 で終わります。逆に `--no-fail` を付けると、失敗があっても 0 で終わります。
+
+## ポリシーをテストする
+
+`conftest verify` は、ポリシーのディレクトリにある `test_` で始まるルールを実行します。「OPA の CLI」の章の `opa test` と同じように、テストも Rego で書きます。
+
+{{< file conftest-usage/verify/policy/main_test.rego >}}
+
+`parse_config` は、Conftest が追加している組み込み関数です。1 つ目の引数のパーサーで、2 つ目の引数の文字列を値に変換します。テストの中に YAML をそのまま書いて、`conftest test` で読み込んだときと同じ `input` を作れます。YAML はインデントが意味を持つので、改行をそのまま書けるローストリングを使っています。
+
+`deny["web: Deployment must have labels"]` は、「変数と参照」の章で説明した集合の参照です。`deny` にそのメッセージが含まれていれば成り立ちます。`count(deny) == 0` は、`deny` が空であることを調べています。
+
+{{< run conftest-usage/verify >}}
+
+`--report full` を付けると、テストごとの結果が表示されます。
+
+`parse_config` を使うテストは Conftest の組み込み関数に依存するので、`opa test` では実行できません。Conftest のポリシーのテストは `conftest verify` で実行します。
+
+## まとめ
+
+- `conftest test` は、複数ドキュメントの YAML をドキュメントごとに評価します。`--combine` で全ファイルを 1 つの `input` にまとめられます。
+- パーサーは拡張子で決まり、`--parser` で指定できます。`-d` でデータを読み込めます。
+- `-o` で表示形式を、`--fail-on-warn` や `--no-fail` で終了コードを変えられます。
+- `conftest verify` でポリシーのテストを実行します。`parse_config` で、テストの中で設定ファイルの文字列を `input` に変換できます。

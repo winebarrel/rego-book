@@ -39,6 +39,7 @@ book:
       chapters:
         - chapters/opa-cli.qmd
         - chapters/conftest-internals.qmd
+        - chapters/conftest-usage.qmd
 
 lang: ja
 

@@ -1,0 +1,5 @@
+kind: Pod
+spec:
+  containers:
+    - name: app
+      image: docker.io/library/nginx:1.27

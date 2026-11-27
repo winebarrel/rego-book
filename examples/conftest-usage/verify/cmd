@@ -1,0 +1,2 @@
+conftest verify
+conftest verify --report full

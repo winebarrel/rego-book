@@ -1,0 +1,3 @@
+conftest test -o table config.yaml
+conftest test config.yaml; echo "exit code: $?"
+conftest test --fail-on-warn config.yaml; echo "exit code: $?"
