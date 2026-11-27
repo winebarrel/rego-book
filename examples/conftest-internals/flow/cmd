@@ -1,0 +1,3 @@
+conftest parse deployment.yaml
+opa eval -d policy -i <(conftest parse deployment.yaml) --format pretty 'data.main'
+conftest test deployment.yaml

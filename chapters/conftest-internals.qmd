@@ -1,0 +1,144 @@
+# Conftest は何を評価しているか {#sec-conftest-internals}
+
+Conftest のポリシーは、`deny contains msg if { ... }` のように書くのが定番です。しかし、`deny` という名前は Rego の言語にとって特別なものではありません。どのルールを評価し、その値をどう「失敗」や「警告」に変えるかは、Conftest が決めています。
+
+この章では、Rego 側で何が評価されているかと、Conftest がその結果のどこを見ているかを分けて説明します。ここで説明する Conftest の動作は、Conftest 0.71.1 のソースコードと、実際の実行結果で確かめたものです。
+
+## Conftest と OPA の関係
+
+Conftest は、OPA を Go のライブラリとして組み込んだツールです。ポリシーの評価は、組み込まれた OPA が行います。Conftest 0.71.1 に組み込まれている OPA は 1.21.1 なので、Rego の言語の機能はそのバージョンの OPA と同じです。
+
+Conftest が OPA に加えているのは、次の 3 つです。
+
+1. 設定ファイルを読み込んで、Rego の入力（`input`）に変換する。
+2. 決まった名前のルールを評価し、その値から検査の成否を決める。
+3. 結果を表示し、失敗があれば 0 以外の終了コードで終わる。
+
+## 全体の流れ
+
+`conftest test ファイル` を実行すると、次の順に処理されます。
+
+1. ファイルを、形式（YAML、JSON、HCL、Dockerfile など）に合ったパーサーで JSON の値に変換し、`input` にします。
+2. ポリシーのディレクトリ（指定しなければ `policy`）にある `.rego` ファイルを読み込みます。
+3. 対象の名前空間（指定しなければ `main`）のパッケージから、名前が `deny`・`violation`・`warn` で始まるルールを探します。
+4. 見つけたルールごとに、`data.名前空間.ルール名` を評価します。
+5. 評価した値から、失敗・警告・成功を決めて表示します。
+
+例で確かめます。
+
+{{< file conftest-internals/flow/deployment.yaml >}}
+
+{{< file conftest-internals/flow/policy/main.rego >}}
+
+{{< run conftest-internals/flow >}}
+
+1 つ目の `conftest parse` は、ファイルを `input` に変換した結果を表示するコマンドです。YAML が、同じ構造の JSON の値になっています。
+
+2 つ目では、その `input` を使って、同じポリシーを `opa eval` で評価しています（`<(...)` は、コマンドの出力をファイルのように渡すシェルの書き方です）。`data.main` の `deny` と `warn` は、どちらも文字列の集合になりました。
+
+3 つ目の `conftest test` は、`deny` の要素を `FAIL`、`warn` の要素を `WARN` として表示しています。2 つ目の結果と見比べると、Conftest が表示しているのは、ルールの値（集合）の要素そのものだと分かります。
+
+## Rego 側で評価しているもの
+
+Rego 側から見ると、`deny contains msg if { ... }` は、「ルール」の章で説明した集合を作るルール（複数値ルール）です。条件を満たす `msg` を集めた集合が、`deny` の値になります。条件を満たすものがなければ、`deny` は空の集合です。
+
+`deny` や `warn` という名前に、Rego の言語としての特別な意味はありません。上の例のように、`opa eval` で評価すれば、ただの集合として値が返ります。Rego 側でしていることは、これまでの章と同じく、「入力から値を計算する」ことだけです。
+
+## Conftest が値のどこを見るか
+
+Conftest は、評価したルールの値の種類によって扱いを変えます。いろいろな値を返すルールで確かめます。
+
+{{< file conftest-internals/values/config.yaml >}}
+
+{{< file conftest-internals/values/policy/main.rego >}}
+
+{{< run conftest-internals/values >}}
+
+6 つのルールはどれも名前が `deny_` で始まり、`deny_nothing` 以外は条件が成り立っています。しかし、失敗になったのは `deny_object` だけでした。
+
+| ルール | Rego で評価した値 | Conftest の扱い |
+| --- | --- | --- |
+| `deny_bool` | `true` | 成功 |
+| `deny_string` | `"name is web"` | 成功 |
+| `deny_object` | `msg` を持つオブジェクトの集合 | 失敗（`msg` がメッセージ） |
+| `deny_empty` | 空文字列の集合 | 成功 |
+| `deny_number` | 数値の集合 | 成功 |
+| `deny_nothing` | 空の集合 | 成功 |
+
+Conftest の扱いは、次の規則で決まっています。
+
+- **値が配列でなければ、何も見ない。** Rego の集合は JSON では配列になるので、`contains` のルールは配列として扱われます。`deny_bool` の `true` や、`deny_string` の文字列は配列ではないので無視され、成功として数えられます。
+- **配列の要素が文字列なら、それがメッセージになる。** ただし空文字列は、メッセージがないものとして成功に数えられます。
+- **要素がオブジェクトなら、`msg` のキーの文字列がメッセージになる。** `msg` 以外のキーは、3 つ目のコマンドの `-o json` の出力のように、メタデータとして結果に含まれます。`msg` がないオブジェクトは、エラーになります。
+- **それ以外の要素（数値など）は無視される。**
+
+特に注意したいのは `deny_bool` です。`deny if { ... }` と書くと、条件が成り立っても Conftest は失敗として扱いません。エラーにもならないので、検査が効いていないことに気づきにくい書き方です。`deny` は必ず `contains` を使った集合のルールとして書きます。
+
+### 名前の規則
+
+Conftest が評価するのは、次の名前のルールです。`_` の後には英数字を続けられます。
+
+| 名前 | 扱い |
+| --- | --- |
+| `deny`、`deny_名前`、`violation`、`violation_名前` | 失敗 |
+| `warn`、`warn_名前` | 警告 |
+
+これ以外の名前のルールは、ほかのルールから参照される補助のルールとして評価されるだけで、結果には表示されません。
+
+### テスト数の数え方
+
+`conftest test` の最後の行の数は、次のように数えています。
+
+- 失敗・警告・例外（後で説明します）は、メッセージ 1 つごとに 1 つと数えます。1 つのルールが 3 つのメッセージを出せば、3 つです。
+- 成功は、おおむね、メッセージを出さなかったルールの定義の数です。
+
+上の例では、6 つのルールの定義のうち、メッセージを出したのは `deny_object` の 1 つだけなので、「6 tests, 5 passed, 1 failure」になりました。
+
+## `deny[msg] if` に注意
+
+古い Rego（v0）では、集合を作るルールを `deny[msg] { ... }` と書いていました。Rego v1 で同じように `deny[msg] if { ... }` と書くと、意味が変わります。
+
+{{< file conftest-internals/bad-head/policy/main.rego >}}
+
+{{< run conftest-internals/bad-head >}}
+
+`opa eval` の結果を見ると、`deny` は集合ではなく、`{"name is web": true}` というオブジェクトになっています。Rego v1 では、`deny[msg] if` は「ルール」の章で説明したオブジェクトを作るルール（値を書かなければ `true`）になるからです。
+
+このまま評価すると、Conftest は値が配列でないので何も見ず、検査が効かなくなってしまいます。そのため Conftest は、ポリシーを読み込む時点でこの書き方を見つけて、エラーにしています。インターネット上の古い例を参考にするときは、`deny contains msg if` に書き直してください。
+
+## 例外
+
+特定のファイルだけ、あるルールの検査を外したいことがあります。`exception` という名前のルールで、検査を外すルールを指定できます。
+
+{{< file conftest-internals/exception/policy/main.rego >}}
+
+{{< run conftest-internals/exception >}}
+
+`exception` は、検査を外すルール名の配列を要素に持つ集合です。ルール名は、先頭の `deny_` などを除いた部分で書きます。`["latest"]` は、`deny_latest` を指しています。
+
+Conftest は、`deny_latest` を評価する前に、`data.main.exception[_][_] == "latest"` を評価しています。これが成り立てば、`deny_latest` の結果はすべて例外（`EXCP`）として扱われ、失敗に数えられません。
+
+`exception` の本体では、`data.conftest.file.name` を参照しています。Conftest は、検査しているファイルの名前を `data.conftest.file.name` に、ディレクトリを `data.conftest.file.dir` に入れてから評価します。そのため、ポリシーからファイル名を使った条件を書けます。この例では、`legacy.yaml` のときだけ `latest` の検査を外しています。`deny_root` は外していないので、`legacy.yaml` でも失敗しています。
+
+## 名前空間
+
+Conftest は、指定しなければ `main` パッケージのルールだけを評価します。
+
+{{< file conftest-internals/namespaces/policy/kubernetes.rego >}}
+
+{{< run conftest-internals/namespaces >}}
+
+`--namespace` でパッケージを指定でき、`--all-namespaces` ですべてのパッケージを評価できます。結果の 3 番目の列（`main`、`kubernetes`）が、ルールのパッケージを表しています。
+
+## まとめ
+
+| | Rego 側 | Conftest 側 |
+| --- | --- | --- |
+| 入力 | `input` を参照する | ファイルを変換して `input` を作る |
+| `deny` などのルール | 名前に特別な意味はない。集合などの値を計算する | 名前で選んで `data.名前空間.ルール名` を評価する |
+| 値 | 条件を満たせば値が決まる | 配列の要素の文字列（またはオブジェクトの `msg`）だけをメッセージとして見る |
+| 例外 | `exception` の値を計算する | `exception[_][_] == "ルール名"` を評価して、結果を例外にする |
+
+- Conftest は、名前が `deny`・`violation`・`warn` で始まるルールの値を見て、成否を決めます。
+- 値が配列でなければ無視されます。`deny if` や `deny[msg] if` ではなく、`deny contains msg if` と書きます。
+- 配列の要素は、文字列か、`msg` を持つオブジェクトにします。

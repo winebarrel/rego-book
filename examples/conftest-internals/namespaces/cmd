@@ -1,0 +1,3 @@
+conftest test config.yaml
+conftest test --namespace kubernetes config.yaml
+conftest test --all-namespaces config.yaml

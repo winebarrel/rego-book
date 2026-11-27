@@ -1,0 +1,2 @@
+opa eval -d policy -i <(conftest parse config.yaml) --format pretty 'data.main'
+conftest test config.yaml
