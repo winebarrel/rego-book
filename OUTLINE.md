@@ -44,7 +44,7 @@
 
 ### 第 III 部 OPA と Conftest
 
-18. OPA と Conftest の概要（`chapters/opa-conftest.qmd`）: OPA の使われ方、Conftest が担当すること、第 III 部の構成
+18. OPA と Conftest の概要（`chapters/opa-conftest.qmd`）: OPA の使われ方、Conftest が担当すること
 19. OPA の CLI: `opa eval`、`opa fmt`、`opa check`、`opa test`（ドキュメントの Policy Testing に対応）
 20. Conftest は何を評価しているか: Conftest と OPA の関係、ファイルから `input` を作る仕組み、どのパッケージのどのルールを問い合わせるか、ルールの値のどこを見て成否を決めるか、`exception`、`data.conftest.file`
 21. Conftest の使い方: `conftest test` の主なオプション、`conftest verify` によるポリシーのテスト
