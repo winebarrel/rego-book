@@ -1,0 +1,2 @@
+opa eval -d policy.rego -i input.json --format pretty 'data.greeting.message'
+opa eval -d policy.rego -i input.json --format raw 'data.greeting.message'

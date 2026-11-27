@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language>
+<!-- コマンドと出力を表示するブロック用の定義（この本のために作成）。"$ " で始まる行をコマンドとして色分けする -->
+<language name="Console" section="Other" version="1" kateversion="5.0" extensions="" license="CC0-1.0">
+  <highlighting>
+    <contexts>
+      <context name="LineStart" attribute="Output" lineEndContext="#stay">
+        <Detect2Chars char="$" char1=" " attribute="Prompt" context="Command" column="0"/>
+        <RegExpr String="." attribute="Output" context="Output" lookAhead="true"/>
+      </context>
+      <context name="Command" attribute="Command" lineEndContext="#pop"/>
+      <context name="Output" attribute="Output" lineEndContext="#pop"/>
+    </contexts>
+    <itemDatas>
+      <itemData name="Prompt" defStyleNum="dsComment"/>
+      <itemData name="Command" defStyleNum="dsFunction"/>
+      <itemData name="Output" defStyleNum="dsNormal"/>
+    </itemDatas>
+  </highlighting>
+  <general>
+    <keywords casesensitive="1"/>
+  </general>
+</language>

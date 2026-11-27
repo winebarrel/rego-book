@@ -1,0 +1,31 @@
+/* コマンドと出力のブロック（console）は、ライト・ダークどちらのテーマでもターミナル風の黒背景にする */
+div.sourceCode:has(> pre.console),
+pre.console {
+  background-color: #1d1f21 !important;
+  border: 1px solid #44474a;
+  border-radius: 4px;
+  /* スクロールバーも暗い配色にする */
+  color-scheme: dark;
+}
+
+/* プロンプトや出力まで一緒にコピーされて役に立たないので、コピーボタンを出さない */
+.code-copy-outer-scaffold:has(pre.console) .code-copy-button {
+  display: none;
+}
+
+pre.console code,
+pre.console code span {
+  color: #e0e0e0;
+}
+
+/* "$ " のプロンプト */
+pre.console code span.co {
+  color: #8a8f94;
+  font-style: normal;
+}
+
+/* コマンド */
+pre.console code span.fu {
+  color: #8fd18f;
+  font-weight: bold;
+}
