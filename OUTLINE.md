@@ -65,6 +65,7 @@
 | `some` による反復 | Some Keyword, In Keyword | 5 章 | 参照の説明で反復を扱うため。`in` による所属判定は 11 章で説明する |
 | `contains` | Contains Keyword | 7 章 | ドキュメントでも Rules で使い始めるので、そこで説明する |
 | `every` | Every Keyword | 9 章 | 全称量化の章でまとめて説明する |
+| `import future.keywords.not`（最低限） | Modules > Imports | 8 章 | `not` を正しく使うために必要になる。`import` 全般は 10 章で説明する |
 
 執筆を進めて新たに順番を変えた箇所は、この表に追記する。
 

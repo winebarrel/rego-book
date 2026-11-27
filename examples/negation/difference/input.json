@@ -1,0 +1,17 @@
+{
+  "servers": [
+    {"name": "web-1"},
+    {"name": "db-1"},
+    {"name": "cache-1"}
+  ],
+  "teams": [
+    {
+      "name": "frontend",
+      "servers": ["web-1"]
+    },
+    {
+      "name": "data",
+      "servers": ["db-1"]
+    }
+  ]
+}

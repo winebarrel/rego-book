@@ -1,0 +1,91 @@
+# 否定 {#sec-negation}
+
+これまでの条件は、「〜である」ことを調べるものでした。この章では、「〜でない」ことを調べる `not` を説明します。Rego の `not` は undefined の扱いに特徴があり、使い方を誤ると意図しない結果になります。
+
+## `not` の基本
+
+式の前に `not` を付けると、その式が成り立たないときに成り立つ条件になります。
+
+{{< file negation/basic/policy.rego >}}
+
+`allow` は、管理者で、かつ利用停止（`suspended`）されていないときに `true` になります。3 つの入力で評価します。
+
+{{< file negation/basic/suspended.json >}}
+
+{{< run negation/basic >}}
+
+`suspended.json` では、`input.user.suspended` が `true` なので `suspended` も `true` になり、`not suspended` は成り立ちません。そのため `allow` は undefined です。
+
+`active.json` では、`input.user.suspended` が `false` です。ルール本体の式は `false` だと成り立たないので、`suspended` は undefined になります。`not suspended` は成り立ち、`allow` は `true` になりました。
+
+`missing.json` には `suspended` のキーがありません。`input.user.suspended` は undefined なので、`suspended` も undefined になり、やはり `allow` は `true` になりました。
+
+このように、`not 式` は、式の値が `false` のときと undefined のときに成り立ちます。
+
+## `not` と `!=` の違い
+
+「管理者でない」という条件は、`not` と `!=` のどちらでも書けそうに見えます。しかし、値が undefined のときの結果が違います。
+
+{{< file negation/not-vs-ne/policy.rego >}}
+
+{{< file negation/not-vs-ne/input.json >}}
+
+{{< run negation/not-vs-ne >}}
+
+入力に `role` がないので、`input.user.role` は undefined です。
+
+- `not_admin`: `input.user.role == "admin"` は undefined なので、`not` を付けた式は成り立ちます。
+- `role_is_not_admin`: `input.user.role != "admin"` は、比べる値が undefined なので式全体も undefined になり、成り立ちません。
+
+値が存在しないときに条件を成り立たせたいなら `not`、値が存在して、かつ特定の値と異なることを確かめたいなら `!=` を使います。入力に必ずあるとは限らない値を調べるときは、どちらの意味が必要かを考えて選んでください。
+
+## 集合に含まれないものを探す
+
+`not` は、集合に値が含まれないことを調べるのにも使えます。次のポリシーは、どのチームも担当していないサーバーを探します。
+
+{{< file negation/difference/policy.rego >}}
+
+{{< file negation/difference/input.json >}}
+
+{{< run negation/difference >}}
+
+`owned` は、いずれかのチームが担当しているサーバー名の集合です。`unowned` では、各サーバーについて `not owned[server.name]` を調べています。前の章で説明したとおり、`owned[server.name]` は名前が集合に含まれないと undefined になるので、`not` を付けると成り立ちます。
+
+## `not` の中の変数
+
+`not` を付けた式の中で使う変数は、`not` より前で値が決まっている必要があります。
+
+{{< file negation/unsafe/policy.rego >}}
+
+{{< run negation/unsafe >}}
+
+`not owned[name]` の `name` は、ほかのどこでも値が決まっていません。「`owned` に含まれない `name`」は無数にあり、すべてを挙げることはできないので、このような変数は安全でない（unsafe）としてエラーになります。前の節の `unowned` では、`some server in input.servers` で先に `server` の値を決めていたので、エラーになりませんでした。
+
+## 関数の呼び出しを否定するときの注意
+
+`not` を付けた式に関数の呼び出しや参照が含まれていると、その途中の値が undefined になったときに、`not` が成り立たないことがあります。
+
+次の 2 つのポリシーは、`import future.keywords.not` の行以外は同じです。ここでの `import` は、言語の新しい機能をそのポリシーで有効にする宣言で、`package` の後に書きます。`import` については「モジュール」の章で説明します。
+
+{{< file negation/composite/without_import.rego >}}
+
+{{< file negation/composite/with_import.rego >}}
+
+{{< file negation/composite/input.json >}}
+
+{{< run negation/composite >}}
+
+入力の `server` には `name` がないので、`startswith(input.server.name, "web-")` の引数が undefined になります。「`web-` で始まらない」ので `not_web` は `true` になってほしいところですが、インポートしていない `without_import` では undefined になりました。
+
+これは、OPA が `not` を評価する前に、関数の引数などの途中の値を先に求めているためです。途中の値が undefined になると、`not` を評価する前にルール本体が成り立たなくなります。
+
+`import future.keywords.not` を書くと、途中の値も含めた式全体が成り立たないときに、`not` が成り立つようになります。OPA は、`not` を使うポリシーにはこのインポートを書くことを推奨しています。この本でも、これ以降、`not` に関数の呼び出しなどを含めるポリシーには、このインポートを書きます。
+
+`future.keywords.not` は OPA 1.17.0 で追加されました。Conftest 0.71.1（組み込まれている OPA は 1.21.1）でも使えます。なお、OPA 1.22.0 では、このインポートと `and`・`or` キーワード（「キーワードの整理」の章で説明します）をまとめて有効にする `import rego.v2` が追加されましたが、Conftest 0.71.1 では使えません。
+
+## まとめ
+
+- `not 式` は、式の値が `false` か undefined のときに成り立ちます。
+- 値が undefined のとき、`not x == "a"` は成り立ちますが、`x != "a"` は成り立ちません。
+- `not` の中の変数は、`not` より前で値が決まっている必要があります。
+- `not` に関数の呼び出しなどを含めるときは、`import future.keywords.not` を書きます。

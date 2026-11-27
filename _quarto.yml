@@ -25,6 +25,7 @@ book:
         - chapters/variables-references.qmd
         - chapters/comprehensions.qmd
         - chapters/rules.qmd
+        - chapters/negation.qmd
 
 lang: ja
 
